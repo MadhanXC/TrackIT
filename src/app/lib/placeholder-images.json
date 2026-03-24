@@ -1,0 +1,23 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "user-avatar-1",
+      "description": "Professional user avatar",
+      "imageUrl": "https://picsum.photos/seed/trackit-user1/150/150",
+      "imageHint": "profile person"
+    },
+    {
+      "id": "team-space-1",
+      "description": "Collaborative office environment",
+      "imageUrl": "https://picsum.photos/seed/trackit-team/800/600",
+      "imageHint": "modern office"
+    },
+    {
+      "id": "dashboard-hero",
+      "description": "Data analytics abstract background",
+      "imageUrl": "https://picsum.photos/seed/trackit-dash/1200/800",
+      "imageHint": "data visualization"
+    }
+  ]
+}
