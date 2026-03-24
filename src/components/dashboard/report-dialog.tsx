@@ -70,7 +70,7 @@ export function ReportDialog() {
   const [priorityFilter, setPriorityFilter] = React.useState("all");
   const [sourceFilter, setSourceFilter] = React.useState("all");
   
-  // Composition Toggle State (Defaults: Unchecked)
+  // Composition Toggle State (Defaults: Unchecked as requested)
   const [includeLog, setIncludeLog] = React.useState(true);
   const [includeStats, setIncludeStats] = React.useState(false); 
   const [includeCharts, setIncludeCharts] = React.useState(false);

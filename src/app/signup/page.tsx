@@ -59,7 +59,7 @@ export default function SignupPage() {
   async function onSubmit(values: SignupValues) {
     setIsLoading(true);
     try {
-      const inviteCodeFromEnv = process.env.NEXT_PUBLIC_INVITE_CODE;
+      const inviteCodeFromEnv = process.env.NEXT_PUBLIC_INVITE_CODE || 'WELCOME2024';
       const isBypass = values.inviteCode.toUpperCase() === inviteCodeFromEnv.toUpperCase();
       
       let codeRef = null;

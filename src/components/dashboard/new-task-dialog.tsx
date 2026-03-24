@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -45,6 +44,8 @@ import { useToast } from '@/hooks/use-toast';
 
 const GEOAPIFY_API_KEY = 'd83a3b59eb364a52a89040fa84473345';
 
+const STATUS_OPTIONS = ['Pending', 'Applied', 'In Review', 'Approved', 'Expired'];
+
 const formSchema = z.object({
   workItemType: z.enum(['Job', 'Project']),
   priority: z.enum(['Low', 'Medium', 'High', 'Urgent']),
@@ -55,11 +56,11 @@ const formSchema = z.object({
   surveyRequired: z.boolean().default(false),
   surveyHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
   surveyExternalName: z.string().optional(),
-  surveyStatus: z.string().optional(),
+  surveyStatus: z.string().default('Pending'),
   permitRequired: z.boolean().default(false),
   permitHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
   permitExternalName: z.string().optional(),
-  permitStatus: z.string().optional(),
+  permitStatus: z.string().default('Pending'),
   materialsRequired: z.boolean().default(false),
   materialsList: z.array(z.object({ name: z.string(), quantity: z.string() })).default([]),
   shipmentRequired: z.boolean().default(false),
@@ -239,9 +240,12 @@ export function NewTaskDialog() {
                 </div>
 
                 {surveyRequired && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
                     <FormField control={form.control} name="surveyHandledBy" render={({ field }) => (
                       <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Survey Handler</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
+                    )} />
+                    <FormField control={form.control} name="surveyStatus" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Survey Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
                     )} />
                     {surveyHandledBy === 'Others' && (
                       <FormField control={form.control} name="surveyExternalName" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">External Name</FormLabel><FormControl><Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl></FormItem>)} />
@@ -250,9 +254,12 @@ export function NewTaskDialog() {
                 )}
 
                 {permitRequired && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
                     <FormField control={form.control} name="permitHandledBy" render={({ field }) => (
                       <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Permit Handler</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
+                    )} />
+                    <FormField control={form.control} name="permitStatus" render={({ field }) => (
+                      <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Permit Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
                     )} />
                     {permitHandledBy === 'Others' && (
                       <FormField control={form.control} name="permitExternalName" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">External Name</FormLabel><FormControl><Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl></FormItem>)} />
