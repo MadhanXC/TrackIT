@@ -64,7 +64,8 @@ import { cn } from '@/lib/utils';
 
 const GEOAPIFY_API_KEY = 'd83a3b59eb364a52a89040fa84473345';
 
-const STATUS_OPTIONS = ['Pending', 'Applied', 'In Review', 'Approved', 'Expired'];
+const SURVEY_STATUS_OPTIONS = ['Not Applied', 'Scheduled', 'In Progress', 'Completed', 'On Hold'];
+const PERMIT_STATUS_OPTIONS = ['Not Applied', 'Applied', 'In Review', 'Approved', 'Expired', 'Denied'];
 
 const formSchema = z.object({
   workItemType: z.enum(['Job', 'Project']),
@@ -76,11 +77,11 @@ const formSchema = z.object({
   surveyRequired: z.boolean().default(false),
   surveyHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
   surveyExternalName: z.string().optional(),
-  surveyStatus: z.string().default('Pending'),
+  surveyStatus: z.string().default('Not Applied'),
   permitRequired: z.boolean().default(false),
   permitHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
   permitExternalName: z.string().optional(),
-  permitStatus: z.string().default('Pending'),
+  permitStatus: z.string().default('Not Applied'),
   materialsRequired: z.boolean().default(false),
   materialsList: z.array(z.object({ name: z.string(), quantity: z.string() })).default([]),
   shipmentRequired: z.boolean().default(false),
@@ -117,11 +118,11 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
       surveyRequired: !!task.surveyRequired,
       surveyHandledBy: task.surveyHandler === 'PLS' ? 'PLS' : 'Others',
       surveyExternalName: task.surveyHandler !== 'PLS' && task.surveyHandler !== 'N/A' ? task.surveyHandler : '',
-      surveyStatus: task.surveyStatus || 'Pending',
+      surveyStatus: task.surveyStatus || 'Not Applied',
       permitRequired: !!task.permitRequired,
       permitHandledBy: task.permitHandledBy === 'PLS' ? 'PLS' : 'Others',
       permitExternalName: task.permitHandler !== 'PLS' && task.permitHandler !== 'N/A' ? task.permitHandler : '',
-      permitStatus: task.permitStatus || 'Pending',
+      permitStatus: task.permitStatus || 'Not Applied',
       materialsRequired: !!task.materialsRequired,
       materialsList: task.materialsList || [],
       shipmentRequired: !!task.shipmentRequired,
@@ -386,7 +387,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         <FormItem><FormLabel className="text-[9px] font-bold uppercase">Survey Handler</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
                       )} />
                       <FormField control={form.control} name="surveyStatus" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase">Survey Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
+                        <FormItem><FormLabel className="text-[9px] font-bold uppercase">Survey Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{SURVEY_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
                       )} />
                       {surveyHandledBy === 'Others' && (
                         <FormField control={form.control} name="surveyExternalName" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase">External Name</FormLabel><FormControl><Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl></FormItem>)} />
@@ -400,7 +401,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         <FormItem><FormLabel className="text-[9px] font-bold uppercase">Permit Handler</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
                       )} />
                       <FormField control={form.control} name="permitStatus" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase">Permit Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
+                        <FormItem><FormLabel className="text-[9px] font-bold uppercase">Permit Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{PERMIT_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
                       )} />
                       {permitHandledBy === 'Others' && (
                         <FormField control={form.control} name="permitExternalName" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase">External Name</FormLabel><FormControl><Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl></FormItem>)} />

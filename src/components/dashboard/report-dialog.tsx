@@ -70,7 +70,7 @@ export function ReportDialog() {
   const [priorityFilter, setPriorityFilter] = React.useState("all");
   const [sourceFilter, setSourceFilter] = React.useState("all");
   
-  // Composition Toggle State (Defaults: Unchecked as requested)
+  // Composition Toggle State (Defaults: Unchecked)
   const [includeLog, setIncludeLog] = React.useState(true);
   const [includeStats, setIncludeStats] = React.useState(false); 
   const [includeCharts, setIncludeCharts] = React.useState(false);
@@ -198,8 +198,8 @@ export function ReportDialog() {
         t.priority || '',
         t.source || ''
       ];
-      if (includeSurvey) row.push(t.surveyRequired ? `"${t.surveyStatus || 'Pending'} (${t.surveyHandler})"` : 'N/A');
-      if (includePermit) row.push(t.permitRequired ? `"${t.permitStatus || 'Pending'} (${t.permitHandler})"` : 'N/A');
+      if (includeSurvey) row.push(t.surveyRequired ? `"${t.surveyStatus || 'Not Applied'} (${t.surveyHandler})"` : 'N/A');
+      if (includePermit) row.push(t.permitRequired ? `"${t.permitStatus || 'Not Applied'} (${t.permitHandler})"` : 'N/A');
       if (includeMaterials) {
         const matString = t.materialsRequired && t.materialsList 
           ? t.materialsList.map((m: any) => `${m.name} (x${m.quantity})`).join('; ')
