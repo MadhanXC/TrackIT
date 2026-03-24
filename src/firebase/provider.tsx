@@ -94,20 +94,17 @@ export const useFirebase = () => {
 
 export const useAuth = () => {
   const context = useFirebase();
-  if (!context.auth) throw new Error('Auth not available');
-  return context.auth;
+  return context.auth; // returns null safely when not ready
 };
 
 export const useFirestore = () => {
   const context = useFirebase();
-  if (!context.firestore) throw new Error('Firestore not available');
-  return context.firestore;
+  return context.firestore; // returns null safely when not ready
 };
 
 export const useFirebaseApp = () => {
   const context = useFirebase();
-  if (!context.firebaseApp) throw new Error('FirebaseApp not available');
-  return context.firebaseApp;
+  return context.firebaseApp; // returns null safely when not ready
 };
 
 export function useMemoFirebase<T>(factory: () => T, deps: React.DependencyList): T {

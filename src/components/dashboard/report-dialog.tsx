@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react";
@@ -26,7 +27,8 @@ import {
   Settings2,
   MousePointerClick,
   RotateCcw,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Loader2
 } from "lucide-react";
 import { 
   format, 
@@ -60,6 +62,9 @@ export function ReportDialog() {
   const reportRef = React.useRef<HTMLDivElement>(null);
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => { setMounted(true); }, []);
   
   // Configuration State
   const [timeFrame, setTimeFrame] = React.useState("all");
@@ -70,27 +75,24 @@ export function ReportDialog() {
   const [priorityFilter, setPriorityFilter] = React.useState("all");
   const [sourceFilter, setSourceFilter] = React.useState("all");
   
-  // Composition Toggle State (Defaults: Unchecked)
   const [includeLog, setIncludeLog] = React.useState(true);
   const [includeStats, setIncludeStats] = React.useState(false); 
   const [includeCharts, setIncludeCharts] = React.useState(false);
 
-  // Granular Column Toggle State (Defaults: Checked)
   const [includeSurvey, setIncludeSurvey] = React.useState(true);
   const [includePermit, setIncludePermit] = React.useState(true);
   const [includeMaterials, setIncludeMaterials] = React.useState(true);
   const [includeShipping, setIncludeShipping] = React.useState(true);
   const [includePOC, setIncludePOC] = React.useState(true);
 
-  // Selection State
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
 
+  // Work Items Query - Isolated by userId
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(
       collection(firestore, 'workItems'), 
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
   }, [firestore, isUserLoading, user]);
 
@@ -187,7 +189,7 @@ export function ReportDialog() {
   const handleExportExcel = () => {
     if (!reportTasks.length) return;
     const headers = ["#", "Address", "Title", "Category", "Status", "Priority", "Source"];
-    if (includePOC) headers.push("POCs");
+    if (includePOC) headers.push("Site POCs");
     if (includeSurvey) headers.push("Survey Handler", "Survey Status");
     if (includePermit) headers.push("Permit Handler", "Permit Status");
     if (includeMaterials) headers.push("Materials List");
@@ -370,7 +372,7 @@ export function ReportDialog() {
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Select Log Columns</p>
                     <div className="flex items-center space-x-3">
                       <Checkbox id="col-poc" checked={includePOC} onCheckedChange={(v) => setIncludePOC(!!v)} className="rounded-none h-3 w-3" />
-                      <Label htmlFor="col-poc" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">POCs</Label>
+                      <Label htmlFor="col-poc" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Site POCs</Label>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Checkbox id="col-survey" checked={includeSurvey} onCheckedChange={(v) => setIncludeSurvey(!!v)} className="rounded-none h-3 w-3" />
@@ -402,22 +404,22 @@ export function ReportDialog() {
                 <span className="text-[9px] font-bold text-slate-400 uppercase">{selectedIds.size || 'All'} Items</span>
               </div>
               <div className="border border-slate-200 rounded-none bg-white max-h-[400px] overflow-y-auto">
-                <table className="w-full text-left text-[9px]">
+                <table className="w-full text-left text-[9px] border-collapse">
                   <thead className="bg-slate-50 sticky top-0 border-b border-slate-200">
                     <tr className="font-bold text-slate-950 uppercase">
-                      <th className="px-4 py-3 w-10">
+                      <th className="px-4 py-3 w-10 border border-slate-200">
                         <Checkbox checked={selectedIds.size === filteredTasks.length && filteredTasks.length > 0} onCheckedChange={toggleSelectAll} className="rounded-none" />
                       </th>
-                      <th className="px-4 py-3">Address - Title</th>
+                      <th className="px-4 py-3 border border-slate-200">Address - Title</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredTasks.map(t => (
                       <tr key={t.id} className={cn("hover:bg-slate-50 cursor-pointer transition-colors", selectedIds.has(t.id) && "bg-primary/5")}>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 border border-slate-200">
                           <Checkbox checked={selectedIds.has(t.id)} onCheckedChange={() => toggleSelectOne(t.id)} className="rounded-none" />
                         </td>
-                        <td className="px-4 py-3 font-bold" onClick={() => toggleSelectOne(t.id)}>
+                        <td className="px-4 py-3 font-bold border border-slate-200" onClick={() => toggleSelectOne(t.id)}>
                           <div className="flex flex-col">
                             <span>{t.siteAddressStreet}</span>
                             <span className="text-[8px] text-slate-400 uppercase">{t.title}</span>
@@ -434,6 +436,7 @@ export function ReportDialog() {
           <div className="lg:col-span-8 p-8 md:p-12 overflow-y-auto bg-white" ref={reportRef}>
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-40 gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-slate-200" />
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Compiling Intelligence...</p>
               </div>
             ) : !reportTasks.length ? (
@@ -445,7 +448,7 @@ export function ReportDialog() {
                 <div className="flex flex-col gap-2 border-l-4 border-slate-950 pl-6">
                   <h2 className="text-3xl font-bold text-slate-950 uppercase tracking-tight">Report</h2>
                   <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    <span>Period: {fromDate ? format(new Date(fromDate), "PPP") : "Historical"} — {toDate ? format(new Date(toDate), "PPP") : "Present"}</span>
+                    <span>Period: {fromDate ? format(new Date(fromDate), "PPP") : "Historical"} — {toDate ? format(new Date(toDate), "PPP") : (mounted ? format(new Date(), "PPP") : "")}</span>
                     <span>•</span>
                     <span>Dataset: {selectedIds.size > 0 ? `${selectedIds.size} Selected` : `Full Filter Result (${reportTasks.length})`}</span>
                   </div>
@@ -496,38 +499,38 @@ export function ReportDialog() {
                       <h3 className="text-sm font-bold uppercase tracking-widest text-slate-950">Detailed Operational Audit Log</h3>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{reportTasks.length} Logged Units</span>
                     </div>
-                    <div className="border border-slate-950 bg-white overflow-x-auto">
+                    <div className="border border-slate-200 bg-white overflow-x-auto">
                       <table className="w-full text-left border-collapse text-[10px] min-w-[800px]">
                         <thead>
-                          <tr className="bg-slate-100 border-b border-slate-950 font-bold uppercase">
-                            <th className="px-4 py-4 border-r border-slate-200 w-12 text-center">#</th>
-                            <th className="px-4 py-4 border-r border-slate-200">Address - Title</th>
-                            {includePOC && <th className="px-4 py-4 border-r border-slate-200">POCs</th>}
-                            <th className="px-4 py-4 border-r border-slate-200">Status</th>
-                            {includeSurvey && <th className="px-4 py-4 border-r border-slate-200">Survey Phase</th>}
-                            {includePermit && <th className="px-4 py-4 border-r border-slate-200">Permit Status</th>}
-                            {includeMaterials && <th className="px-4 py-4 border-r border-slate-200">Materials & Items</th>}
-                            <th className="px-4 py-4">Operational Timeline</th>
+                          <tr className="bg-slate-100 border-b border-slate-200 font-bold uppercase">
+                            <th className="px-4 py-4 border border-slate-200 w-12 text-center">#</th>
+                            <th className="px-4 py-4 border border-slate-200">Address - Title</th>
+                            {includePOC && <th className="px-4 py-4 border border-slate-200">Site POCs</th>}
+                            <th className="px-4 py-4 border border-slate-200">Status</th>
+                            {includeSurvey && <th className="px-4 py-4 border border-slate-200">Survey Phase</th>}
+                            {includePermit && <th className="px-4 py-4 border border-slate-200">Permit Status</th>}
+                            {includeMaterials && <th className="px-4 py-4 border border-slate-200">Materials & Items</th>}
+                            <th className="px-4 py-4 border border-slate-200">Operational Timeline</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200">
+                        <tbody>
                           {reportTasks.map((task, idx) => (
                             <tr key={task.id} className="font-medium text-slate-900">
-                              <td className="px-4 py-4 border-r border-slate-200 text-center font-bold text-slate-400">{idx + 1}</td>
-                              <td className="px-4 py-4 border-r border-slate-200 font-bold">
+                              <td className="px-4 py-4 border border-slate-200 text-center font-bold text-slate-400">{idx + 1}</td>
+                              <td className="px-4 py-4 border border-slate-200 font-bold">
                                 <div className="flex flex-col">
                                   <span>{task.siteAddressStreet}</span>
                                   <span className="text-[8px] text-slate-400 uppercase">{task.title}</span>
                                 </div>
                               </td>
                               {includePOC && (
-                                <td className="px-4 py-4 border-r border-slate-200 font-bold">
+                                <td className="px-4 py-4 border border-slate-200 font-bold">
                                   {task.pocName || '—'}
                                 </td>
                               )}
-                              <td className="px-4 py-4 border-r border-slate-200 uppercase font-bold">{task.overallWorkStatus}</td>
+                              <td className="px-4 py-4 border border-slate-200 uppercase font-bold">{task.overallWorkStatus}</td>
                               {includeSurvey && (
-                                <td className="px-4 py-4 border-r border-slate-200">
+                                <td className="px-4 py-4 border border-slate-200">
                                   {task.surveyRequired ? (
                                     <div className="flex flex-col">
                                       <span>{task.surveyStatus}</span>
@@ -537,7 +540,7 @@ export function ReportDialog() {
                                 </td>
                               )}
                               {includePermit && (
-                                <td className="px-4 py-4 border-r border-slate-200">
+                                <td className="px-4 py-4 border border-slate-200">
                                   {task.permitRequired ? (
                                     <div className="flex flex-col">
                                       <span>{task.permitStatus}</span>
@@ -547,7 +550,7 @@ export function ReportDialog() {
                                 </td>
                               )}
                               {includeMaterials && (
-                                <td className="px-4 py-4 border-r border-slate-200 uppercase font-bold text-slate-600">
+                                <td className="px-4 py-4 border border-slate-200 uppercase font-bold text-slate-600">
                                   {task.materialsRequired && task.materialsList?.length > 0 ? (
                                     <div className="flex flex-col gap-1">
                                       {task.materialsList.map((m: any, mIdx: number) => (
@@ -559,7 +562,7 @@ export function ReportDialog() {
                                   ) : '—'}
                                 </td>
                               )}
-                              <td className="px-4 py-4 font-bold text-slate-950">
+                              <td className="px-4 py-4 border border-slate-200 font-bold text-slate-950">
                                 <div className="flex flex-col gap-1.5 text-[8px]">
                                   <span>Created: {task.createdAt ? format(new Date(task.createdAt), "yyyy-MM-dd") : '—'}</span>
                                   <span>Initiated: {task.dateInitiated || '—'}</span>
@@ -575,4 +578,9 @@ export function ReportDialog() {
                 )}
               </div>
             )}
-          
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

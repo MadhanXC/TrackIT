@@ -4,7 +4,7 @@
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase"
-import { collection, query, orderBy } from "firebase/firestore"
+import { collection, query, orderBy, where } from "firebase/firestore"
 import { 
   Printer, 
   FileText, 
@@ -56,15 +56,11 @@ export default function AnalyticsPage() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   
-  // Report Configuration State
   const [includeSummary, setIncludeSummary] = React.useState(true);
   const [includeCharts, setIncludeCharts] = React.useState(true);
   const [includeTable, setIncludeTable] = React.useState(true);
-  
-  // Selection State
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   
-  // Filter State
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
@@ -74,14 +70,20 @@ export default function AnalyticsPage() {
   const [priorityFilter, setPriorityFilter] = React.useState("all");
   const [sourceFilter, setSourceFilter] = React.useState("all");
 
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => { setMounted(true); }, []);
+
+  // Work Items Query - Isolated by userId
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
-    return query(collection(firestore, 'workItems'), orderBy('createdAt', 'desc'));
+    return query(
+      collection(firestore, 'workItems'), 
+      where('userId', '==', user.uid)
+    );
   }, [firestore, isUserLoading, user]);
 
   const { data: rawTasks, isLoading } = useCollection(tasksQuery);
 
-  // Apply Filters
   const filteredTasks = React.useMemo(() => {
     if (!rawTasks) return [];
     
@@ -102,7 +104,6 @@ export default function AnalyticsPage() {
       return true;
     });
 
-    // Sort: Active first, Completed last
     return filtered.sort((a, b) => {
       const isACompleted = a.overallWorkStatus === 'Completed';
       const isBCompleted = b.overallWorkStatus === 'Completed';
@@ -112,13 +113,11 @@ export default function AnalyticsPage() {
     });
   }, [rawTasks, typeFilter, statusFilter, priorityFilter, sourceFilter, dateRange]);
 
-  // Determine which tasks to include in the final report
   const reportTasks = React.useMemo(() => {
     if (selectedIds.size === 0) return filteredTasks;
     return filteredTasks.filter(t => selectedIds.has(t.id));
   }, [filteredTasks, selectedIds]);
 
-  // Process data for charts
   const stats = React.useMemo(() => {
     if (!reportTasks.length) return null;
 
@@ -192,7 +191,6 @@ export default function AnalyticsPage() {
         </header>
 
         <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
-          {/* Configuration & Filter Bar - Hidden on Print */}
           <div className="mb-12 space-y-8 print:hidden">
             <div className="flex flex-col gap-8 bg-slate-50 p-6 border border-slate-200">
               <div className="space-y-6">
@@ -316,7 +314,6 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Table Section - Always visible to allow selection */}
           <div className="mb-16 space-y-6 print:hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -329,21 +326,21 @@ export default function AnalyticsPage() {
             </div>
             
             <div className="border border-slate-200 rounded-none overflow-x-auto bg-white">
-              <table className="w-full text-left text-[10px] min-w-[800px]">
+              <table className="w-full text-left text-[10px] min-w-[800px] border-collapse">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr className="font-bold text-slate-950 uppercase tracking-wider">
-                    <th className="px-6 py-5 w-16">
+                    <th className="px-6 py-5 w-16 border border-slate-200">
                       <Checkbox 
                         checked={selectedIds.size === filteredTasks.length && filteredTasks.length > 0} 
                         onCheckedChange={toggleSelectAll} 
                         className="rounded-none"
                       />
                     </th>
-                    <th className="px-6 py-5">Address - Title</th>
-                    <th className="px-6 py-5">Category</th>
-                    <th className="px-6 py-5 text-center">Lifecycle</th>
-                    <th className="px-6 py-5 text-center">Priority</th>
-                    <th className="px-6 py-5 text-right">Channel</th>
+                    <th className="px-6 py-5 border border-slate-200">Address - Title</th>
+                    <th className="px-6 py-5 border border-slate-200">Category</th>
+                    <th className="px-6 py-5 text-center border border-slate-200">Lifecycle</th>
+                    <th className="px-6 py-5 text-center border border-slate-200">Priority</th>
+                    <th className="px-6 py-5 text-right border border-slate-200">Channel</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -355,23 +352,23 @@ export default function AnalyticsPage() {
                         selectedIds.has(task.id) && "bg-primary/5"
                       )}
                     >
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-slate-200">
                         <Checkbox 
                           checked={selectedIds.has(task.id)} 
                           onCheckedChange={() => toggleSelectOne(task.id)} 
                           className="rounded-none"
                         />
                       </td>
-                      <td className="px-6 py-4 font-bold">
+                      <td className="px-6 py-4 font-bold border border-slate-200">
                         <div className="flex flex-col">
                           <span className="text-slate-950">{task.siteAddressStreet}</span>
                           <span className="text-[9px] text-slate-400 font-bold uppercase">{task.title}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 border border-slate-200">
                         <span className="px-2 py-1 bg-slate-100 font-bold uppercase text-[9px] tracking-tighter">{task.workItemType}</span>
                       </td>
-                      <td className="px-6 py-4 text-center uppercase font-bold">
+                      <td className="px-6 py-4 text-center uppercase font-bold border border-slate-200">
                         <span className={cn(
                           "px-2 py-1",
                           task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-600"
@@ -379,7 +376,7 @@ export default function AnalyticsPage() {
                           {task.overallWorkStatus}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-4 text-center border border-slate-200">
                         <span className={cn(
                           "px-2 py-1 font-bold uppercase text-[9px]",
                           task.priority === 'Urgent' ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-500"
@@ -387,12 +384,12 @@ export default function AnalyticsPage() {
                           {task.priority}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right uppercase font-bold text-slate-500">{task.source}</td>
+                      <td className="px-6 py-4 text-right uppercase font-bold text-slate-500 border border-slate-200">{task.source}</td>
                     </tr>
                   ))}
                   {!filteredTasks.length && !isLoading && (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest">
+                      <td colSpan={6} className="py-12 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest border border-slate-200">
                         No operational records matching current filter configuration.
                       </td>
                     </tr>
@@ -402,10 +399,8 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Divider for UI */}
           <div className="h-px bg-slate-200 mb-16 print:hidden" />
 
-          {/* Final Report Preview */}
           <div id="final-report-content" className="space-y-16">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-32 gap-4 print:hidden">
@@ -418,17 +413,15 @@ export default function AnalyticsPage() {
               </div>
             ) : (
               <div className="space-y-16">
-                {/* Report Header - Clean & Professional */}
                 <div className="flex flex-col gap-2 border-l-4 border-primary pl-6">
                   <h2 className="text-3xl font-bold text-slate-950 uppercase tracking-tight">Report</h2>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    <span>Period: {dateRange?.from ? format(dateRange.from, "PPP") : "Full Workspace History"} — {dateRange?.to ? format(dateRange.to, "PPP") : "Present"}</span>
+                    <span>Period: {dateRange?.from ? format(dateRange.from, "PPP") : "Full Workspace History"} — {dateRange?.to ? format(dateRange.to, "PPP") : (mounted ? format(new Date(), "PPP") : "")}</span>
                     <span className="hidden sm:inline">•</span>
                     <span>Dataset: {selectedIds.size > 0 ? `${selectedIds.size} Selected Records` : `Full Result Set (${reportTasks.length})`}</span>
                   </div>
                 </div>
 
-                {/* Summary Section */}
                 {includeSummary && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <Card className="rounded-none border-slate-200 shadow-none bg-slate-50/50">
@@ -466,7 +459,6 @@ export default function AnalyticsPage() {
                   </div>
                 )}
 
-                {/* Charts Section */}
                 {includeCharts && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 print:block">
                     <Card className="rounded-none border-slate-200 shadow-none print:mb-12 print:border-none">
@@ -528,7 +520,6 @@ export default function AnalyticsPage() {
                   </div>
                 )}
 
-                {/* Table Section */}
                 {includeTable && (
                   <div className="pt-12 border-t border-slate-100">
                     <div className="flex items-center justify-between mb-8">
@@ -538,34 +529,34 @@ export default function AnalyticsPage() {
                       </div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{reportTasks.length} Logged Units</span>
                     </div>
-                    <div className="border border-slate-950 rounded-none overflow-hidden bg-white">
+                    <div className="border border-slate-200 rounded-none overflow-hidden bg-white">
                       <table className="w-full text-left text-[10px] border-collapse">
-                        <thead className="bg-slate-100 border-b border-slate-950">
+                        <thead className="bg-slate-50 border-b border-slate-200">
                           <tr className="font-bold text-slate-950 uppercase tracking-wider">
-                            <th className="px-6 py-5 border-r border-slate-200 w-16 text-center">#</th>
-                            <th className="px-6 py-5 border-r border-slate-200">Address - Title</th>
-                            <th className="px-6 py-5 border-r border-slate-200">Category</th>
-                            <th className="px-6 py-5 border-r border-slate-200">Lifecycle State</th>
-                            <th className="px-6 py-5 border-r border-slate-200">Channel</th>
-                            <th className="px-6 py-5">Initiation Date</th>
+                            <th className="px-6 py-5 border border-slate-200 w-16 text-center">#</th>
+                            <th className="px-6 py-5 border border-slate-200">Address - Title</th>
+                            <th className="px-6 py-5 border border-slate-200">Category</th>
+                            <th className="px-6 py-5 border border-slate-200">Lifecycle State</th>
+                            <th className="px-6 py-5 border border-slate-200">Channel</th>
+                            <th className="px-6 py-5 border border-slate-200">Initiation Date</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200">
+                        <tbody>
                           {reportTasks.map((task, idx) => (
                             <tr key={task.id} className="text-slate-900 font-medium bg-white">
-                              <td className="px-6 py-4 border-r border-slate-200 text-center font-bold">{idx + 1}</td>
-                              <td className="px-6 py-4 border-r border-slate-200 font-bold">
+                              <td className="px-6 py-4 border border-slate-200 text-center font-bold">{idx + 1}</td>
+                              <td className="px-6 py-4 border border-slate-200 font-bold">
                                 <div className="flex flex-col">
                                   <span className="text-slate-950">{task.siteAddressStreet}</span>
                                   <span className="text-[9px] text-slate-400 font-bold uppercase">{task.title}</span>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 border-r border-slate-200 uppercase font-bold">{task.workItemType}</td>
-                              <td className="px-6 py-4 border-r border-slate-200 uppercase font-bold">
+                              <td className="px-6 py-4 border border-slate-200 uppercase font-bold">{task.workItemType}</td>
+                              <td className="px-6 py-4 border border-slate-200 uppercase font-bold">
                                 {task.overallWorkStatus}
                               </td>
-                              <td className="px-6 py-4 border-r border-slate-200 uppercase font-bold text-slate-500">{task.source}</td>
-                              <td className="px-6 py-4 text-slate-950 font-bold">
+                              <td className="px-6 py-4 border border-slate-200 uppercase font-bold text-slate-500">{task.source}</td>
+                              <td className="px-6 py-4 border border-slate-200 text-slate-950 font-bold">
                                 {task.dateInitiated || task.createdAt ? format(new Date(task.dateInitiated || task.createdAt), "yyyy-MM-dd") : 'PENDING'}
                               </td>
                             </tr>
@@ -576,10 +567,9 @@ export default function AnalyticsPage() {
                   </div>
                 )}
                 
-                {/* Report Footer - Only on Print */}
                 <div className="hidden print:flex flex-col items-center pt-24 gap-2">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Generated via TrackIt Operational Intelligence Workspace</p>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-200">{format(new Date(), "PPPP p")}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-200">{mounted ? format(new Date(), "PPPP p") : ""}</p>
                 </div>
               </div>
             )}

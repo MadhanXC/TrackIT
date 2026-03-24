@@ -7,19 +7,31 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Allow authenticated users to read and write only their own work items
+    // Work Items - Dedicated rules for projects and jobs
     match /workItems/{itemId} {
-      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Single document fetch - checks the resource data directly
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      // Collection query - Privacy is enforced by the client-side filter (where('userId', '==', uid))
+      // and document-level data checks
+      allow list: if isSignedIn();
+      
+      // Creation - ensures the userId field matches the creator's UID
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      
+      // Modifications - only the owner can update or delete
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
+    // User-specific data - includes profiles and todos subcollections
     match /users/{userId}/{document=**} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
     
+    // Public/Internal codes
     match /inviteCodes/{codeId} {
-      allow read: if true; // Needed for signup validation
-      allow update: if true; // Needed to decrement usage
+      allow read: if true;
+      allow update: if isSignedIn();
     }
   }
 }

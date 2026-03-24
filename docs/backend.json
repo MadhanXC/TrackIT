@@ -32,6 +32,7 @@
       "type": "object",
       "properties": {
         "id": { "type": "string" },
+        "userId": { "type": "string", "description": "The owner of the work item." },
         "title": { "type": "string" },
         "siteAddressStreet": { "type": "string" },
         "pocName": { "type": "string" },
@@ -51,7 +52,7 @@
         "materialsList": { "type": "array", "items": { "type": "object" } },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "title", "siteAddressStreet", "workItemType", "overallWorkStatus", "createdAt"]
+      "required": ["id", "userId", "title", "siteAddressStreet", "workItemType", "overallWorkStatus", "createdAt"]
     }
   },
   "auth": {

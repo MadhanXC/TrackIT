@@ -1,3 +1,4 @@
+
 "use client"
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
@@ -30,21 +31,25 @@ export default function Dashboard() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const [todoTitle, setTodoTitle] = React.useState("");
+  const [mounted, setMounted] = React.useState(false);
 
-  // Work Items Query - Filtered by User ID for Isolation
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Work Items Query - Strictly isolated by userId
   const recentTasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(
       collection(firestore, 'workItems'), 
       where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc'), 
       limit(10)
     );
   }, [firestore, isUserLoading, user]);
 
   const { data: rawTasks, isLoading: tasksLoading } = useCollection(recentTasksQuery);
 
-  // Todo List Query
+  // Todo List Query - Strictly isolated
   const todosQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(collection(firestore, 'users', user.uid, 'todos'), orderBy('createdAt', 'desc'));
@@ -60,7 +65,6 @@ export default function Dashboard() {
     return rawTasks?.filter(t => t.overallWorkStatus === 'Completed').length || 0;
   }, [rawTasks]);
 
-  // Sort tasks: Active first, Completed last
   const sortedTasks = React.useMemo(() => {
     if (!rawTasks) return [];
     return [...rawTasks].sort((a, b) => {
@@ -72,7 +76,6 @@ export default function Dashboard() {
     });
   }, [rawTasks]);
 
-  // Extract First Name for personalized greeting (Normal casing, no comma)
   const firstName = React.useMemo(() => {
     if (!user?.displayName) return 'User';
     const name = user.displayName.split(' ')[0];
@@ -119,69 +122,29 @@ export default function Dashboard() {
         </header>
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full flex flex-col">
-          <div className="mb-8 md:mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-950 tracking-tighter">
-              Hi {firstName}
-            </h2>
-            <p className="text-slate-500 font-bold text-[10px] tracking-widest uppercase">{activeTasksCount} active items</p>
+          <div className="mb-8 md:mb-10 order-none">
+            {mounted ? (
+              <>
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-950 tracking-tighter">
+                  Hi {firstName}
+                </h2>
+                <p className="text-slate-500 font-bold text-[10px] tracking-widest uppercase">{activeTasksCount} active items</p>
+              </>
+            ) : (
+              <div className="h-10 w-48 bg-slate-50 animate-pulse" />
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
-            <div className="col-span-full md:col-span-4 order-1 md:order-2">
-              <Card className="border-slate-300 shadow-none rounded-none">
-                <CardHeader className="border-b border-slate-100 pb-3">
-                  <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Quick Tasks</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 px-4 pb-4">
-                  <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
-                    <input 
-                      placeholder="Add personal todo..." 
-                      className="flex h-9 w-full bg-background px-3 py-2 text-[10px] rounded-none border border-slate-200 font-bold uppercase tracking-tight focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400"
-                      value={todoTitle}
-                      onChange={(e) => setTodoTitle(e.target.value)}
-                    />
-                    <Button type="submit" size="icon" className="h-9 w-9 bg-slate-950 rounded-none shrink-0">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </form>
-                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
-                    {todosLoading ? (
-                      <div className="py-8 flex justify-center"><Loader2 className="h-4 w-4 animate-spin text-slate-200" /></div>
-                    ) : !todos || todos.length === 0 ? (
-                      <p className="text-[9px] font-bold text-slate-400 uppercase text-center py-4">No quick tasks</p>
-                    ) : (
-                      todos.map((todo) => (
-                        <div key={todo.id} className="group flex items-center justify-between p-2 bg-slate-50 border border-slate-100">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <Checkbox 
-                              checked={todo.completed} 
-                              onCheckedChange={() => handleToggleTodo(todo)}
-                              className="rounded-none border-slate-300 data-[state=checked]:bg-slate-950 data-[state=checked]:border-slate-950" 
-                            />
-                            <span className={cn(
-                              "text-[10px] font-bold uppercase tracking-tight truncate",
-                              todo.completed ? "text-slate-300 line-through" : "text-slate-900"
-                            )}>
-                              {todo.title}
-                            </span>
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 text-slate-300 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleDeleteTodo(todo.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="col-span-full order-none mb-2 md:mb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <StatCard title="Active" value={activeTasksCount.toString()} change="Current" trend="neutral" icon={Zap} />
+                <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime" trend="neutral" icon={Clock3} />
+                <StatCard title="Completed" value={completedTasksCount.toString()} change="Closed" trend="up" icon={BarChart3} />
+              </div>
             </div>
 
-            <div className="col-span-full md:col-span-8 order-2 md:order-1 md:row-span-3">
+            <div className="col-span-full md:col-span-8 order-1">
               <Card className="border-slate-300 shadow-none rounded-none h-full">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 pb-4">
                   <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Recent Entries</CardTitle>
@@ -220,22 +183,58 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            <div className="col-span-full order-3 md:-order-1 mb-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatCard title="Active" value={activeTasksCount.toString()} change="Current" trend="neutral" icon={Zap} />
-                <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime" trend="neutral" icon={Clock3} />
-                <StatCard title="Completed" value={completedTasksCount.toString()} change="Closed" trend="up" icon={BarChart3} />
-              </div>
-            </div>
-
-            <div className="col-span-full md:col-span-4 order-4 md:order-3">
-              <div className="p-6 md:p-8 border border-slate-950 rounded-none bg-slate-950 text-white flex flex-col justify-between min-h-[180px] md:min-h-[200px]">
-                <div>
-                  <h3 className="text-lg md:text-xl font-bold mb-2 uppercase tracking-tight">Workspace</h3>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Systematic audit trail for all high-precision field operations.</p>
-                </div>
-                <Link href="/tasks" className="mt-4"><Button className="w-full sm:w-fit bg-white text-slate-950 hover:bg-slate-200 font-bold uppercase text-[10px] tracking-widest px-8 rounded-none">Access Workspace</Button></Link>
-              </div>
+            <div className="col-span-full md:col-span-4 order-2">
+              <Card className="border-slate-300 shadow-none rounded-none">
+                <CardHeader className="border-b border-slate-100 pb-3">
+                  <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Quick Tasks</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 px-4 pb-4">
+                  <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
+                    <input 
+                      placeholder="Add personal todo..." 
+                      className="flex h-9 w-full bg-background px-3 py-2 text-[10px] rounded-none border border-slate-200 font-bold uppercase tracking-tight focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400"
+                      value={todoTitle}
+                      onChange={(e) => setTodoTitle(e.target.value)}
+                    />
+                    <Button type="submit" size="icon" className="h-9 w-9 bg-slate-950 rounded-none shrink-0">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </form>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                    {todosLoading ? (
+                      <div className="py-8 flex justify-center"><Loader2 className="h-4 w-4 animate-spin text-slate-200" /></div>
+                    ) : !todos || todos.length === 0 ? (
+                      <p className="text-[9px] font-bold text-slate-400 uppercase text-center py-4">No quick tasks</p>
+                    ) : (
+                      todos.map((todo) => (
+                        <div key={todo.id} className="group flex items-center justify-between p-2 bg-slate-50 border border-slate-100">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Checkbox 
+                              checked={todo.completed} 
+                              onCheckedChange={() => handleToggleTodo(todo)}
+                              className="rounded-none border-slate-300 data-[state=checked]:bg-slate-950 data-[state=checked]:border-slate-950" 
+                            />
+                            <span className={cn(
+                              "text-[10px] font-bold uppercase tracking-tight truncate",
+                              todo.completed ? "text-slate-300 line-through" : "text-slate-900"
+                            )}>
+                              {todo.title}
+                            </span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-slate-300 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleDeleteTodo(todo.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </main>

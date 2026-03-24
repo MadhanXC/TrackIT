@@ -20,16 +20,6 @@ import {
   FormLabel, 
   FormMessage
 } from '@/components/ui/form';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -47,7 +37,6 @@ import {
   Loader2,
   Search,
   Save,
-  Trash2,
   Layout,
   FileText,
   Package,
@@ -55,7 +44,7 @@ import {
   Layers,
   User
 } from 'lucide-react';
-import { useFirestore, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { useFirestore, updateDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -211,12 +200,6 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
               {!readOnly && <DialogDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Entry: {task.id.slice(0, 8)}</DialogDescription>}
             </div>
           </div>
-          {!readOnly && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="text-destructive"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-              <AlertDialogContent className="rounded-none border-slate-200 w-[90vw] max-w-md"><AlertDialogHeader><AlertDialogTitle className="font-bold">Remove?</AlertDialogTitle></AlertDialogHeader><AlertDialogFooter className="flex-col sm:flex-row gap-2"><AlertDialogCancel className="font-bold rounded-none w-full sm:w-auto">Cancel</AlertDialogCancel><AlertDialogAction onClick={() => { deleteDocumentNonBlocking(doc(firestore, 'workItems', task.id)); setOpen(false); }} className="bg-destructive text-white font-bold rounded-none w-full sm:w-auto">Confirm</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
-            </AlertDialog>
-          )}
         </DialogHeader>
 
         <div className="p-4 md:p-8">
@@ -316,11 +299,11 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 bg-slate-50 border border-slate-100">
                         <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Initiated</p>
-                        <p className="text-[10px] font-bold text-slate-950">{task.dateInitiated || '—'}</p>
+                        <p className="text-[10px] font-bold text-slate-950">{task.dateInitiated || 'Not Commenced'}</p>
                       </div>
                       <div className="p-4 bg-slate-50 border border-slate-100">
                         <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Completed</p>
-                        <p className="text-[10px] font-bold text-slate-950">{task.dateCompleted || '—'}</p>
+                        <p className="text-[10px] font-bold text-slate-950">{task.dateCompleted || 'In Pipeline'}</p>
                       </div>
                     </div>
                   </div>
@@ -347,7 +330,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                 </div>
 
                 <FormField control={form.control} name="pocName" render={({ field }) => (
-                  <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2"><User className="h-3 w-3" /> POCs</FormLabel><FormControl><Textarea placeholder="Enter consolidated contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2"><User className="h-3 w-3" /> POCs</FormLabel><FormControl><Textarea placeholder="Enter POC contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
 
                 <FormField control={form.control} name="title" render={({ field }) => (
@@ -480,3 +463,5 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
         </div>
       </DialogContent>
     </Dialog>
+  );
+}

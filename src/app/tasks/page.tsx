@@ -1,3 +1,4 @@
+
 'use client';
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
@@ -79,13 +80,14 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = React.useState('newest');
   const [currentPage, setCurrentPage] = React.useState(1);
 
-  // Filtered by User ID for Isolation
+  // Work Items Query - Isolated by userId
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(
       collection(firestore, 'workItems'), 
       where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      // Temporarily removed to confirm index issue
+      // orderBy('createdAt', 'desc')
     );
   }, [firestore, isUserLoading, user]);
 
@@ -385,7 +387,7 @@ export default function TasksPage() {
                         </div>
                         <div className="flex items-center justify-between mt-4">
                           <Badge className={cn("text-[9px] font-bold rounded-none border-none px-3 uppercase tracking-widest", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950")}>{task.overallWorkStatus}</Badge>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated || '—'}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated || 'Not Commenced'}</span>
                         </div>
                       </div>
                     </div>
