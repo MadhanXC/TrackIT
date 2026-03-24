@@ -218,9 +218,4 @@ export default function SignupPage() {
         </Card>
         
         <div className="text-center">
-          <p className="text-[8px] font-bold text-slate-300 uppercase tracking-[0.2em]">Secure Audit-Ready Environment v1.0</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+          <p className="text-[8px] font-bold text-slate-300 uppercase tracking

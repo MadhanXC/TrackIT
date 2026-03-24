@@ -49,12 +49,11 @@ import {
   Save,
   Trash2,
   Layout,
-  ClipboardCheck,
   FileText,
   Package,
-  Truck,
   Calendar,
-  Layers
+  Layers,
+  User
 } from 'lucide-react';
 import { useFirestore, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -64,7 +63,7 @@ import { cn } from '@/lib/utils';
 
 const GEOAPIFY_API_KEY = 'd83a3b59eb364a52a89040fa84473345';
 
-const SURVEY_STATUS_OPTIONS = ['Not Applied', 'Scheduled', 'In Progress', 'Completed', 'On Hold'];
+const SURVEY_STATUS_OPTIONS = ['Scheduled', 'In Progress', 'Completed', 'On Hold'];
 const PERMIT_STATUS_OPTIONS = ['Not Applied', 'Applied', 'In Review', 'Approved', 'Expired', 'Denied'];
 
 const formSchema = z.object({
@@ -72,15 +71,16 @@ const formSchema = z.object({
   priority: z.enum(['Low', 'Medium', 'High', 'Urgent']),
   title: z.string().min(2, 'Title required'),
   street1: z.string().min(1, 'Address required'),
+  pocName: z.string().min(1, 'POC contact info required'),
   description: z.string().min(5, 'Description required'),
   source: z.enum(['Call', 'Email', 'Text', 'In-person']).default('Call'),
   surveyRequired: z.boolean().default(false),
   surveyHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
-  surveyExternalName: z.string().optional(),
-  surveyStatus: z.string().default('Not Applied'),
+  surveyHandlerOthers: z.string().optional(),
+  surveyStatus: z.string().default('Scheduled'),
   permitRequired: z.boolean().default(false),
   permitHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
-  permitExternalName: z.string().optional(),
+  permitHandlerOthers: z.string().optional(),
   permitStatus: z.string().default('Not Applied'),
   materialsRequired: z.boolean().default(false),
   materialsList: z.array(z.object({ name: z.string(), quantity: z.string() })).default([]),
@@ -106,6 +106,8 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
   const firestore = useFirestore();
   const { toast } = useToast();
 
+  const isHandlerPLS = (handler: string) => handler === 'PLS';
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -113,15 +115,16 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
       priority: task.priority || 'Medium',
       title: task.title || '',
       street1: task.siteAddressStreet || '',
+      pocName: task.pocName || '',
       description: task.description || '',
       source: task.source || 'Call',
       surveyRequired: !!task.surveyRequired,
-      surveyHandledBy: task.surveyHandler === 'PLS' ? 'PLS' : 'Others',
-      surveyExternalName: task.surveyHandler !== 'PLS' && task.surveyHandler !== 'N/A' ? task.surveyHandler : '',
-      surveyStatus: task.surveyStatus || 'Not Applied',
+      surveyHandledBy: isHandlerPLS(task.surveyHandler) ? 'PLS' : 'Others',
+      surveyHandlerOthers: isHandlerPLS(task.surveyHandler) ? '' : task.surveyHandler,
+      surveyStatus: task.surveyStatus || 'Scheduled',
       permitRequired: !!task.permitRequired,
-      permitHandledBy: task.permitHandledBy === 'PLS' ? 'PLS' : 'Others',
-      permitExternalName: task.permitHandler !== 'PLS' && task.permitHandler !== 'N/A' ? task.permitHandler : '',
+      permitHandledBy: isHandlerPLS(task.permitHandler) ? 'PLS' : 'Others',
+      permitHandlerOthers: isHandlerPLS(task.permitHandler) ? '' : task.permitHandler,
       permitStatus: task.permitStatus || 'Not Applied',
       materialsRequired: !!task.materialsRequired,
       materialsList: task.materialsList || [],
@@ -136,7 +139,6 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
 
   const { fields: materialFields, append: appendMaterial, remove: removeMaterial } = useFieldArray({ control: form.control, name: 'materialsList' });
 
-  const workItemType = form.watch('workItemType');
   const street1Value = form.watch('street1');
   const surveyRequired = form.watch('surveyRequired');
   const surveyHandledBy = form.watch('surveyHandledBy');
@@ -174,10 +176,18 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
     if (!firestore || readOnly) return;
     setIsSubmitting(true);
     try {
+      const finalSurveyHandler = values.surveyHandledBy === 'PLS' ? 'PLS' : values.surveyHandlerOthers || 'Others';
+      const finalPermitHandler = values.permitHandledBy === 'PLS' ? 'PLS' : values.permitHandlerOthers || 'Others';
+
       const docRef = doc(firestore, 'workItems', task.id);
-      const surveyHandler = values.surveyRequired ? (values.surveyHandledBy === 'PLS' ? 'PLS' : (values.surveyExternalName || 'External')) : 'N/A';
-      const permitHandler = values.permitRequired ? (values.permitHandledBy === 'PLS' ? 'PLS' : (values.permitExternalName || 'External')) : 'N/A';
-      updateDocumentNonBlocking(docRef, { ...values, siteAddressStreet: values.street1, surveyHandler, permitHandler, overallWorkStatus: values.dateCompleted ? 'Completed' : values.overallWorkStatus, updatedAt: new Date().toISOString() });
+      updateDocumentNonBlocking(docRef, { 
+        ...values, 
+        siteAddressStreet: values.street1, 
+        surveyHandler: values.surveyRequired ? finalSurveyHandler : 'N/A',
+        permitHandler: values.permitRequired ? finalPermitHandler : 'N/A',
+        overallWorkStatus: values.dateCompleted ? 'Completed' : values.overallWorkStatus, 
+        updatedAt: new Date().toISOString() 
+      });
       toast({ title: 'Success', description: `Changes updated.` });
       setOpen(false);
     } catch (e: any) { 
@@ -196,7 +206,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
             <div className="h-10 w-10 rounded-none bg-slate-950 flex items-center justify-center shrink-0"><Layout className="h-5 w-5 text-white" /></div>
             <div className="flex flex-col text-left">
               <DialogTitle className="text-base md:text-lg font-bold text-slate-950 uppercase tracking-tight">
-                {readOnly ? 'Project Details' : `Modify ${workItemType}`}
+                {readOnly ? 'Entry Details' : `Modify ${form.watch('workItemType')}`}
               </DialogTitle>
               {!readOnly && <DialogDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Entry: {task.id.slice(0, 8)}</DialogDescription>}
             </div>
@@ -215,6 +225,13 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
               <div className="space-y-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-slate-950 leading-tight tracking-tight">{task.siteAddressStreet}</h1>
                 <p className="text-lg md:text-xl font-bold text-slate-400">{task.title}</p>
+              </div>
+
+              <div className="bg-slate-50 p-6 border border-slate-100">
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2"><User className="h-3 w-3" /> Site POCs</p>
+                  <p className="text-sm font-bold text-slate-950 whitespace-pre-wrap">{task.pocName || 'No contact info provided'}</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 border-y border-slate-100 py-8">
@@ -254,42 +271,22 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                   <div className="space-y-6">
                     <div className="flex items-center gap-2">
                       <Layers className="h-4 w-4 text-primary" />
-                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Operational Requirements</h3>
+                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Operational Handlers</h3>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="p-4 border border-slate-100 bg-white">
                         <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Permit Status</p>
-                        <div className="flex items-center gap-2">
-                          {task.permitRequired ? (
-                            <div className="flex flex-col">
-                              <span className="text-[10px] font-bold text-slate-950 uppercase">{task.permitStatus}</span>
-                              <span className="text-[9px] text-primary font-bold uppercase">Handler: {task.permitHandler}</span>
-                            </div>
-                          ) : <span className="text-[10px] font-bold text-slate-300 uppercase">Not Required</span>}
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-slate-950 uppercase">{task.permitRequired ? task.permitStatus : 'Not Required'}</span>
+                          {task.permitRequired && <span className="text-[8px] text-primary font-bold uppercase mt-1">By: {task.permitHandler}</span>}
                         </div>
                       </div>
                       <div className="p-4 border border-slate-100 bg-white">
                         <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Survey Status</p>
-                        <div className="flex items-center gap-2">
-                          {task.surveyRequired ? (
-                            <div className="flex flex-col">
-                              <span className="text-[10px] font-bold text-slate-950 uppercase">{task.surveyStatus}</span>
-                              <span className="text-[9px] text-primary font-bold uppercase">Handler: {task.surveyHandler}</span>
-                            </div>
-                          ) : <span className="text-[10px] font-bold text-slate-300 uppercase">Not Required</span>}
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-slate-950 uppercase">{task.surveyRequired ? task.surveyStatus : 'Not Required'}</span>
+                          {task.surveyRequired && <span className="text-[8px] text-primary font-bold uppercase mt-1">By: {task.surveyHandler}</span>}
                         </div>
-                      </div>
-                      <div className="p-4 border border-slate-100 bg-white">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Logistics</p>
-                        <div className="flex items-center gap-2">
-                          {task.shipmentRequired ? (
-                            <span className="text-[10px] font-bold text-slate-950 uppercase">{task.shipmentStatus}</span>
-                          ) : <span className="text-[10px] font-bold text-slate-300 uppercase">N/A</span>}
-                        </div>
-                      </div>
-                      <div className="p-4 border border-slate-100 bg-white">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Confirmation</p>
-                        <span className="text-[10px] font-bold text-slate-950 uppercase">{task.confirmationStatus}</span>
                       </div>
                     </div>
                   </div>
@@ -319,11 +316,11 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 bg-slate-50 border border-slate-100">
                         <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Initiated</p>
-                        <p className="text-[10px] font-bold text-slate-950">{task.dateInitiated || 'Not Commenced'}</p>
+                        <p className="text-[10px] font-bold text-slate-950">{task.dateInitiated || '—'}</p>
                       </div>
                       <div className="p-4 bg-slate-50 border border-slate-100">
                         <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Completed</p>
-                        <p className="text-[10px] font-bold text-slate-950">{task.dateCompleted || 'In Pipeline'}</p>
+                        <p className="text-[10px] font-bold text-slate-950">{task.dateCompleted || '—'}</p>
                       </div>
                     </div>
                   </div>
@@ -348,9 +345,15 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Source</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{['Call', 'Email', 'Text', 'In-person'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
                   )} />
                 </div>
+
+                <FormField control={form.control} name="pocName" render={({ field }) => (
+                  <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2"><User className="h-3 w-3" /> POCs</FormLabel><FormControl><Textarea placeholder="Enter consolidated contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+
                 <FormField control={form.control} name="title" render={({ field }) => (
                   <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Title</FormLabel><FormControl><Input className="border-slate-300 font-bold h-11 rounded-none" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+
                 <div className="space-y-2 relative">
                   <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Site Address</FormLabel>
                   <FormField control={form.control} name="street1" render={({ field }) => (
@@ -369,11 +372,13 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     </FormItem>
                   )} />
                 </div>
+
                 <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Detailed Scope</FormLabel><FormControl><Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+
                 <div className="space-y-6 pt-6 border-t border-slate-100">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Requirements</p>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Operational Handlers</p>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <FormField control={form.control} name="surveyRequired" render={({ field }) => (<FormItem className="flex items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" /></FormControl><FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Survey</FormLabel></FormItem>)} />
                     <FormField control={form.control} name="permitRequired" render={({ field }) => (<FormItem className="flex items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" /></FormControl><FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Permit</FormLabel></FormItem>)} />
@@ -382,29 +387,37 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                   </div>
 
                   {surveyRequired && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
-                      <FormField control={form.control} name="surveyHandledBy" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase">Survey Handler</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
-                      )} />
-                      <FormField control={form.control} name="surveyStatus" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase">Survey Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{SURVEY_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
-                      )} />
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="surveyHandledBy" render={({ field }) => (
+                          <FormItem><FormLabel className="text-[9px] font-bold uppercase">Handled By</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
+                        )} />
+                        <FormField control={form.control} name="surveyStatus" render={({ field }) => (
+                          <FormItem><FormLabel className="text-[9px] font-bold uppercase">Survey Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{SURVEY_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
+                        )} />
+                      </div>
                       {surveyHandledBy === 'Others' && (
-                        <FormField control={form.control} name="surveyExternalName" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase">External Name</FormLabel><FormControl><Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl></FormItem>)} />
+                        <FormField control={form.control} name="surveyHandlerOthers" render={({ field }) => (
+                          <FormItem><FormLabel className="text-[9px] font-bold uppercase">Specify Handler</FormLabel><FormControl><Input placeholder="Enter handler name..." className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
                       )}
                     </div>
                   )}
 
                   {permitRequired && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
-                      <FormField control={form.control} name="permitHandledBy" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase">Permit Handler</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
-                      )} />
-                      <FormField control={form.control} name="permitStatus" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase">Permit Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{PERMIT_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
-                      )} />
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="permitHandledBy" render={({ field }) => (
+                          <FormItem><FormLabel className="text-[9px] font-bold uppercase">Handled By</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
+                        )} />
+                        <FormField control={form.control} name="permitStatus" render={({ field }) => (
+                          <FormItem><FormLabel className="text-[9px] font-bold uppercase">Permit Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{PERMIT_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
+                        )} />
+                      </div>
                       {permitHandledBy === 'Others' && (
-                        <FormField control={form.control} name="permitExternalName" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase">External Name</FormLabel><FormControl><Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl></FormItem>)} />
+                        <FormField control={form.control} name="permitHandlerOthers" render={({ field }) => (
+                          <FormItem><FormLabel className="text-[9px] font-bold uppercase">Specify Handler</FormLabel><FormControl><Input placeholder="Enter handler name..." className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
                       )}
                     </div>
                   )}
@@ -426,7 +439,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <div className="animate-in fade-in slide-in-from-top-1">
                       <FormField control={form.control} name="shipmentStatus" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Shipment Status</FormLabel>
+                          <FormLabel className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Logistics Status</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger className="h-10 border-slate-300 rounded-none font-bold text-[10px] uppercase bg-white">
@@ -444,6 +457,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     </div>
                   )}
                 </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
                   <FormField control={form.control} name="confirmationStatus" render={({ field }) => (
                     <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Confirmation Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="Pending">Pending</SelectItem><SelectItem value="Confirmed">Confirmed</SelectItem></SelectContent></Select></FormItem>
@@ -452,6 +466,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{['Pending', 'In Progress', 'Completed', 'On Hold'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
                   )} />
                 </div>
+
                 {confirmationStatus === 'Confirmed' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-5 bg-slate-50 border border-slate-200 rounded-none animate-in fade-in slide-in-from-top-1">
                     <FormField control={form.control} name="dateInitiated" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase">Initiation Date</FormLabel><FormControl><Input type="date" className="h-10 text-[10px] font-bold border-slate-300 rounded-none bg-white" {...field} /></FormControl></FormItem>)} />
@@ -465,5 +480,3 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
         </div>
       </DialogContent>
     </Dialog>
-  );
-}

@@ -7,17 +7,14 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Allow authenticated users to read and write to the main collections
-    match /workItems/{document=**} {
-      allow read, write: if isSignedIn();
-    }
-
-    match /addresses/{document=**} {
-      allow read, write: if isSignedIn();
+    // Allow authenticated users to read and write only their own work items
+    match /workItems/{itemId} {
+      allow read, update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
 
     match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
     
     match /inviteCodes/{codeId} {

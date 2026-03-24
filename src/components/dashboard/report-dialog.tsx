@@ -41,7 +41,7 @@ import {
   endOfYear
 } from "date-fns";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { collection, query, orderBy, where } from "firebase/firestore";
 import { 
   Bar, 
   BarChart, 
@@ -80,13 +80,18 @@ export function ReportDialog() {
   const [includePermit, setIncludePermit] = React.useState(true);
   const [includeMaterials, setIncludeMaterials] = React.useState(true);
   const [includeShipping, setIncludeShipping] = React.useState(true);
+  const [includePOC, setIncludePOC] = React.useState(true);
 
   // Selection State
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
 
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
-    return query(collection(firestore, 'workItems'), orderBy('createdAt', 'desc'));
+    return query(
+      collection(firestore, 'workItems'), 
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
   }, [firestore, isUserLoading, user]);
 
   const { data: rawTasks, isLoading } = useCollection(tasksQuery);
@@ -182,8 +187,9 @@ export function ReportDialog() {
   const handleExportExcel = () => {
     if (!reportTasks.length) return;
     const headers = ["#", "Address", "Title", "Category", "Status", "Priority", "Source"];
-    if (includeSurvey) headers.push("Survey Phase");
-    if (includePermit) headers.push("Permit Status");
+    if (includePOC) headers.push("POCs");
+    if (includeSurvey) headers.push("Survey Handler", "Survey Status");
+    if (includePermit) headers.push("Permit Handler", "Permit Status");
     if (includeMaterials) headers.push("Materials List");
     if (includeShipping) headers.push("Shipping Status");
     headers.push("Date Created", "Date Initiated", "Date Completed");
@@ -198,8 +204,9 @@ export function ReportDialog() {
         t.priority || '',
         t.source || ''
       ];
-      if (includeSurvey) row.push(t.surveyRequired ? `"${t.surveyStatus || 'Not Applied'} (${t.surveyHandler})"` : 'N/A');
-      if (includePermit) row.push(t.permitRequired ? `"${t.permitStatus || 'Not Applied'} (${t.permitHandler})"` : 'N/A');
+      if (includePOC) row.push(`"${t.pocName || ''}"`);
+      if (includeSurvey) row.push(`"${t.surveyHandler || ''}"`, `"${t.surveyStatus || ''}"`);
+      if (includePermit) row.push(`"${t.permitHandler || ''}"`, `"${t.permitStatus || ''}"`);
       if (includeMaterials) {
         const matString = t.materialsRequired && t.materialsList 
           ? t.materialsList.map((m: any) => `${m.name} (x${m.quantity})`).join('; ')
@@ -254,6 +261,7 @@ export function ReportDialog() {
     setIncludePermit(true);
     setIncludeMaterials(true);
     setIncludeShipping(true);
+    setIncludePOC(true);
     setIncludeStats(false);
     setIncludeCharts(false);
   };
@@ -271,7 +279,7 @@ export function ReportDialog() {
             <div className="h-10 w-10 bg-slate-950 flex items-center justify-center shrink-0">
               <FileText className="h-5 w-5 text-white" />
             </div>
-            <DialogTitle className="text-xl font-bold uppercase tracking-tight">Report</DialogTitle>
+            <DialogTitle className="text-xl font-bold uppercase tracking-tight">Report Generator</DialogTitle>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <Button variant="ghost" size="sm" onClick={handleReset} className="font-bold rounded-none h-10 px-4 uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-950">
@@ -360,6 +368,10 @@ export function ReportDialog() {
                 {includeLog && (
                   <div className="pl-8 space-y-3 pt-2 border-l border-slate-200 ml-2 animate-in slide-in-from-top-1">
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Select Log Columns</p>
+                    <div className="flex items-center space-x-3">
+                      <Checkbox id="col-poc" checked={includePOC} onCheckedChange={(v) => setIncludePOC(!!v)} className="rounded-none h-3 w-3" />
+                      <Label htmlFor="col-poc" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">POCs</Label>
+                    </div>
                     <div className="flex items-center space-x-3">
                       <Checkbox id="col-survey" checked={includeSurvey} onCheckedChange={(v) => setIncludeSurvey(!!v)} className="rounded-none h-3 w-3" />
                       <Label htmlFor="col-survey" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Survey Phase</Label>
@@ -490,11 +502,11 @@ export function ReportDialog() {
                           <tr className="bg-slate-100 border-b border-slate-950 font-bold uppercase">
                             <th className="px-4 py-4 border-r border-slate-200 w-12 text-center">#</th>
                             <th className="px-4 py-4 border-r border-slate-200">Address - Title</th>
+                            {includePOC && <th className="px-4 py-4 border-r border-slate-200">POCs</th>}
                             <th className="px-4 py-4 border-r border-slate-200">Status</th>
                             {includeSurvey && <th className="px-4 py-4 border-r border-slate-200">Survey Phase</th>}
                             {includePermit && <th className="px-4 py-4 border-r border-slate-200">Permit Status</th>}
                             {includeMaterials && <th className="px-4 py-4 border-r border-slate-200">Materials & Items</th>}
-                            {includeShipping && <th className="px-4 py-4 border-r border-slate-200">Shipping</th>}
                             <th className="px-4 py-4">Operational Timeline</th>
                           </tr>
                         </thead>
@@ -508,9 +520,32 @@ export function ReportDialog() {
                                   <span className="text-[8px] text-slate-400 uppercase">{task.title}</span>
                                 </div>
                               </td>
+                              {includePOC && (
+                                <td className="px-4 py-4 border-r border-slate-200 font-bold">
+                                  {task.pocName || '—'}
+                                </td>
+                              )}
                               <td className="px-4 py-4 border-r border-slate-200 uppercase font-bold">{task.overallWorkStatus}</td>
-                              {includeSurvey && <td className="px-4 py-4 border-r border-slate-200">{task.surveyRequired ? task.surveyStatus : '—'}</td>}
-                              {includePermit && <td className="px-4 py-4 border-r border-slate-200">{task.permitRequired ? task.permitStatus : '—'}</td>}
+                              {includeSurvey && (
+                                <td className="px-4 py-4 border-r border-slate-200">
+                                  {task.surveyRequired ? (
+                                    <div className="flex flex-col">
+                                      <span>{task.surveyStatus}</span>
+                                      <span className="text-[8px] text-primary uppercase font-bold">By: {task.surveyHandler}</span>
+                                    </div>
+                                  ) : '—'}
+                                </td>
+                              )}
+                              {includePermit && (
+                                <td className="px-4 py-4 border-r border-slate-200">
+                                  {task.permitRequired ? (
+                                    <div className="flex flex-col">
+                                      <span>{task.permitStatus}</span>
+                                      <span className="text-[8px] text-primary uppercase font-bold">By: {task.permitHandler}</span>
+                                    </div>
+                                  ) : '—'}
+                                </td>
+                              )}
                               {includeMaterials && (
                                 <td className="px-4 py-4 border-r border-slate-200 uppercase font-bold text-slate-600">
                                   {task.materialsRequired && task.materialsList?.length > 0 ? (
@@ -524,7 +559,6 @@ export function ReportDialog() {
                                   ) : '—'}
                                 </td>
                               )}
-                              {includeShipping && <td className="px-4 py-4 border-r border-slate-200">{task.shipmentRequired ? task.shipmentStatus : '—'}</td>}
                               <td className="px-4 py-4 font-bold text-slate-950">
                                 <div className="flex flex-col gap-1.5 text-[8px]">
                                   <span>Created: {task.createdAt ? format(new Date(task.createdAt), "yyyy-MM-dd") : '—'}</span>
@@ -541,9 +575,4 @@ export function ReportDialog() {
                 )}
               </div>
             )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+          

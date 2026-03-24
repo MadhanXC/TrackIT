@@ -37,14 +37,15 @@ import {
   Search,
   X,
   PlusCircle,
+  User
 } from 'lucide-react';
-import { useFirestore, setDocumentNonBlocking } from '@/firebase';
+import { useFirestore, setDocumentNonBlocking, useUser } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 const GEOAPIFY_API_KEY = 'd83a3b59eb364a52a89040fa84473345';
 
-const SURVEY_STATUS_OPTIONS = ['Not Applied', 'Scheduled', 'In Progress', 'Completed', 'On Hold'];
+const SURVEY_STATUS_OPTIONS = ['Scheduled', 'In Progress', 'Completed', 'On Hold'];
 const PERMIT_STATUS_OPTIONS = ['Not Applied', 'Applied', 'In Review', 'Approved', 'Expired', 'Denied'];
 
 const formSchema = z.object({
@@ -52,15 +53,16 @@ const formSchema = z.object({
   priority: z.enum(['Low', 'Medium', 'High', 'Urgent']),
   title: z.string().min(2, 'Title required'),
   street1: z.string().min(1, 'Address required'),
+  pocName: z.string().min(1, 'POC contact info required'),
   description: z.string().min(5, 'Description required'),
   source: z.enum(['Call', 'Email', 'Text', 'In-person']).default('Call'),
   surveyRequired: z.boolean().default(false),
   surveyHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
-  surveyExternalName: z.string().optional(),
-  surveyStatus: z.string().default('Not Applied'),
+  surveyHandlerOthers: z.string().optional(),
+  surveyStatus: z.string().default('Scheduled'),
   permitRequired: z.boolean().default(false),
   permitHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
-  permitExternalName: z.string().optional(),
+  permitHandlerOthers: z.string().optional(),
   permitStatus: z.string().default('Not Applied'),
   materialsRequired: z.boolean().default(false),
   materialsList: z.array(z.object({ name: z.string(), quantity: z.string() })).default([]),
@@ -84,6 +86,7 @@ export function NewTaskDialog() {
   
   const lastFetchedValueRef = React.useRef<string>('');
   const firestore = useFirestore();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -93,15 +96,16 @@ export function NewTaskDialog() {
       priority: 'Medium',
       title: '',
       street1: '',
+      pocName: '',
       description: '',
       source: 'Call',
       surveyRequired: false,
       surveyHandledBy: 'PLS',
-      surveyExternalName: '',
-      surveyStatus: 'Not Applied',
+      surveyHandlerOthers: '',
+      surveyStatus: 'Scheduled',
       permitRequired: false,
       permitHandledBy: 'PLS',
-      permitExternalName: '',
+      permitHandlerOthers: '',
       permitStatus: 'Not Applied',
       materialsRequired: false,
       materialsList: [],
@@ -116,7 +120,6 @@ export function NewTaskDialog() {
 
   const { fields: materialFields, append: appendMaterial, remove: removeMaterial } = useFieldArray({ control: form.control, name: 'materialsList' });
 
-  const workItemType = form.watch('workItemType');
   const street1Value = form.watch('street1');
   const surveyRequired = form.watch('surveyRequired');
   const surveyHandledBy = form.watch('surveyHandledBy');
@@ -151,23 +154,25 @@ export function NewTaskDialog() {
   };
 
   async function onSubmit(values: FormValues) {
-    if (!firestore) return;
+    if (!firestore || !user) return;
     setIsSubmitting(true);
     try {
       const workItemsRef = doc(collection(firestore, 'workItems'));
-      const surveyHandler = values.surveyRequired ? (values.surveyHandledBy === 'PLS' ? 'PLS' : (values.surveyExternalName || 'External')) : 'N/A';
-      const permitHandler = values.permitRequired ? (values.permitHandledBy === 'PLS' ? 'PLS' : (values.permitExternalName || 'External')) : 'N/A';
+      const finalSurveyHandler = values.surveyHandledBy === 'PLS' ? 'PLS' : values.surveyHandlerOthers || 'Others';
+      const finalPermitHandler = values.permitHandledBy === 'PLS' ? 'PLS' : values.permitHandlerOthers || 'Others';
+      
       setDocumentNonBlocking(workItemsRef, { 
         ...values, 
         id: workItemsRef.id, 
+        userId: user.uid,
         siteAddressStreet: values.street1, 
-        surveyHandler, 
-        permitHandler, 
+        surveyHandler: values.surveyRequired ? finalSurveyHandler : 'N/A',
+        permitHandler: values.permitRequired ? finalPermitHandler : 'N/A',
         overallWorkStatus: values.dateCompleted ? 'Completed' : values.overallWorkStatus, 
         createdAt: new Date().toISOString(), 
         updatedAt: new Date().toISOString() 
       }, { merge: true });
-      toast({ title: 'Success', description: `New ${workItemType.toLowerCase()} created.` });
+      toast({ title: 'Success', description: `New ${values.workItemType.toLowerCase()} created.` });
       setOpen(false);
       form.reset();
     } catch (e: any) { 
@@ -188,8 +193,8 @@ export function NewTaskDialog() {
         <DialogHeader className="p-4 md:p-6 border-b border-slate-200 flex flex-row items-center gap-3 sticky top-0 bg-white z-20">
           <div className="h-10 w-10 rounded-none bg-slate-950 flex items-center justify-center shrink-0"><PlusCircle className="h-5 w-5 text-white" /></div>
           <div className="flex flex-col text-left">
-            <DialogTitle className="text-base md:text-lg font-bold text-slate-950 uppercase tracking-tight">Create {workItemType}</DialogTitle>
-            <DialogDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Define parameters and requirements</DialogDescription>
+            <DialogTitle className="text-base md:text-lg font-bold text-slate-950 uppercase tracking-tight">Create Entry</DialogTitle>
+            <DialogDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Define parameters and site details</DialogDescription>
           </div>
         </DialogHeader>
 
@@ -207,9 +212,15 @@ export function NewTaskDialog() {
                   <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Source</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{['Call', 'Email', 'Text', 'In-person'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
                 )} />
               </div>
-              <FormField control={form.control} name="title" render={({ field }) => (
-                <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Title</FormLabel><FormControl><Input placeholder="Internal reference..." className="border-slate-300 font-bold h-11 rounded-none" {...field} /></FormControl><FormMessage /></FormItem>
+
+              <FormField control={form.control} name="pocName" render={({ field }) => (
+                <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2"><User className="h-3 w-3" /> POCs</FormLabel><FormControl><Textarea placeholder="Enter consolidated contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
+
+              <FormField control={form.control} name="title" render={({ field }) => (
+                <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Internal Title</FormLabel><FormControl><Input placeholder="Reference description..." className="border-slate-300 font-bold h-11 rounded-none" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              
               <div className="space-y-2 relative">
                 <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Site Address</FormLabel>
                 <FormField control={form.control} name="street1" render={({ field }) => (
@@ -228,11 +239,13 @@ export function NewTaskDialog() {
                   </FormItem>
                 )} />
               </div>
+
               <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Detailed Scope</FormLabel><FormControl><Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
+
               <div className="space-y-6 pt-6 border-t border-slate-100">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Requirements</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Operational Requirements</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <FormField control={form.control} name="surveyRequired" render={({ field }) => (<FormItem className="flex items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" /></FormControl><FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Survey</FormLabel></FormItem>)} />
                   <FormField control={form.control} name="permitRequired" render={({ field }) => (<FormItem className="flex items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" /></FormControl><FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Permit</FormLabel></FormItem>)} />
@@ -241,39 +254,47 @@ export function NewTaskDialog() {
                 </div>
 
                 {surveyRequired && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
-                    <FormField control={form.control} name="surveyHandledBy" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Survey Handler</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
-                    )} />
-                    <FormField control={form.control} name="surveyStatus" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Survey Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{SURVEY_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
-                    )} />
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField control={form.control} name="surveyHandledBy" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Handled By</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
+                      )} />
+                      <FormField control={form.control} name="surveyStatus" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Survey Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{SURVEY_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
+                      )} />
+                    </div>
                     {surveyHandledBy === 'Others' && (
-                      <FormField control={form.control} name="surveyExternalName" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">External Name</FormLabel><FormControl><Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl></FormItem>)} />
+                      <FormField control={form.control} name="surveyHandlerOthers" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Specify Handler</FormLabel><FormControl><Input placeholder="Enter handler name..." className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl><FormMessage /></FormItem>
+                      )} />
                     )}
                   </div>
                 )}
 
                 {permitRequired && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-1">
-                    <FormField control={form.control} name="permitHandledBy" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Permit Handler</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
-                    )} />
-                    <FormField control={form.control} name="permitStatus" render={({ field }) => (
-                      <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Permit Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{PERMIT_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
-                    )} />
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField control={form.control} name="permitHandledBy" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Handled By</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
+                      )} />
+                      <FormField control={form.control} name="permitStatus" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Permit Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{PERMIT_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
+                      )} />
+                    </div>
                     {permitHandledBy === 'Others' && (
-                      <FormField control={form.control} name="permitExternalName" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">External Name</FormLabel><FormControl><Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl></FormItem>)} />
+                      <FormField control={form.control} name="permitHandlerOthers" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Specify Handler</FormLabel><FormControl><Input placeholder="Enter handler name..." className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl><FormMessage /></FormItem>
+                      )} />
                     )}
                   </div>
                 )}
 
                 {materialsRequired && (
                   <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
-                    <div className="flex items-center justify-between"><p className="text-[9px] font-bold uppercase text-slate-500">Materials</p><Button type="button" variant="ghost" size="sm" onClick={() => appendMaterial({ name: '', quantity: '' })} className="h-6 text-[9px] uppercase font-bold text-primary"><Plus className="h-3 w-3 mr-1" /> Add</Button></div>
+                    <div className="flex items-center justify-between"><p className="text-[9px] font-bold uppercase text-slate-500">Materials & Items</p><Button type="button" variant="ghost" size="sm" onClick={() => appendMaterial({ name: '', quantity: '' })} className="h-6 text-[9px] uppercase font-bold text-primary"><Plus className="h-3 w-3 mr-1" /> Add Item</Button></div>
                     {materialFields.map((item, index) => (
                       <div key={item.id} className="flex gap-2">
-                        <Input className="h-9 text-[10px] font-bold border-slate-300 rounded-none flex-1" placeholder="Item" {...form.register(`materialsList.${index}.name`)} />
+                        <Input className="h-9 text-[10px] font-bold border-slate-300 rounded-none flex-1" placeholder="Item Name" {...form.register(`materialsList.${index}.name`)} />
                         <Input className="h-9 text-[10px] font-bold border-slate-300 rounded-none w-20" placeholder="Qty" {...form.register(`materialsList.${index}.quantity`)} />
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeMaterial(index)} className="h-9 w-9 text-destructive"><X className="h-3.5 w-3.5" /></Button>
                       </div>
@@ -285,7 +306,7 @@ export function NewTaskDialog() {
                   <div className="animate-in fade-in slide-in-from-top-1">
                     <FormField control={form.control} name="shipmentStatus" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Shipment Status</FormLabel>
+                        <FormLabel className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Logistics Status</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-10 border-slate-300 rounded-none font-bold text-[10px] uppercase bg-white">
@@ -303,25 +324,21 @@ export function NewTaskDialog() {
                   </div>
                 )}
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
                 <FormField control={form.control} name="confirmationStatus" render={({ field }) => (
-                  <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Confirmation Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="Pending">Pending</SelectItem><SelectItem value="Confirmed">Confirmed</SelectItem></SelectContent></Select></FormItem>
+                  <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Confirmation</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="Pending">Pending</SelectItem><SelectItem value="Confirmed">Confirmed</SelectItem></SelectContent></Select></FormItem>
                 )} />
                 <FormField control={form.control} name="overallWorkStatus" render={({ field }) => (
-                  <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{['Pending', 'In Progress', 'Completed', 'On Hold'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
+                  <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Lifecycle Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{['Pending', 'In Progress', 'Completed', 'On Hold'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
                 )} />
               </div>
+
               {confirmationStatus === 'Confirmed' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-5 bg-slate-50 border border-slate-200 rounded-none animate-in fade-in slide-in-from-top-1">
                   <FormField control={form.control} name="dateInitiated" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Initiation Date</FormLabel><FormControl><Input type="date" className="h-10 text-[10px] font-bold border-slate-300 rounded-none bg-white" {...field} /></FormControl></FormItem>)} />
                   <FormField control={form.control} name="dateCompleted" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Completion Date</FormLabel><FormControl><Input type="date" className="h-10 text-[10px] font-bold border-slate-300 rounded-none bg-white" {...field} /></FormControl></FormItem>)} />
                 </div>
               )}
-              <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-xs tracking-widest" disabled={isSubmitting}>{isSubmitting ? <Loader2 className="animate-spin mr-2" /> : `Create ${workItemType}`}</Button>
+              <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-xs tracking-widest" disabled={isSubmitting}>{isSubmitting ? <Loader2 className="animate-spin mr-2" /> : 'Create Entry'}</Button>
             </form>
-          </Form>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}

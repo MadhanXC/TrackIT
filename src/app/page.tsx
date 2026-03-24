@@ -18,7 +18,7 @@ import { NewTaskDialog } from "@/components/dashboard/new-task-dialog"
 import { EditTaskDialog } from "@/components/dashboard/edit-task-dialog"
 import { ReportDialog } from "@/components/dashboard/report-dialog"
 import { useFirestore, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase"
-import { collection, query, orderBy, limit, doc } from "firebase/firestore"
+import { collection, query, orderBy, limit, doc, where } from "firebase/firestore"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -31,10 +31,15 @@ export default function Dashboard() {
   const { user, isUserLoading } = useUser();
   const [todoTitle, setTodoTitle] = React.useState("");
 
-  // Work Items Query
+  // Work Items Query - Filtered by User ID for Isolation
   const recentTasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
-    return query(collection(firestore, 'workItems'), orderBy('createdAt', 'desc'), limit(10));
+    return query(
+      collection(firestore, 'workItems'), 
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc'), 
+      limit(10)
+    );
   }, [firestore, isUserLoading, user]);
 
   const { data: rawTasks, isLoading: tasksLoading } = useCollection(recentTasksQuery);
@@ -55,7 +60,7 @@ export default function Dashboard() {
     return rawTasks?.filter(t => t.overallWorkStatus === 'Completed').length || 0;
   }, [rawTasks]);
 
-  // Sort tasks: Active first, Completed last. Secondary sort is createdAt desc (from query)
+  // Sort tasks: Active first, Completed last
   const sortedTasks = React.useMemo(() => {
     if (!rawTasks) return [];
     return [...rawTasks].sort((a, b) => {
@@ -63,11 +68,11 @@ export default function Dashboard() {
       const isBCompleted = b.overallWorkStatus === 'Completed';
       if (isACompleted && !isBCompleted) return 1;
       if (!isACompleted && isBCompleted) return -1;
-      return 0; // Maintain existing createdAt order
+      return 0;
     });
   }, [rawTasks]);
 
-  // Extract First Name for personalized greeting and normalize casing
+  // Extract First Name for personalized greeting (Normal casing, no comma)
   const firstName = React.useMemo(() => {
     if (!user?.displayName) return 'User';
     const name = user.displayName.split(' ')[0];
@@ -114,11 +119,11 @@ export default function Dashboard() {
         </header>
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full flex flex-col">
-          <div className="mb-8 md:mb-10 order-none">
+          <div className="mb-8 md:mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-slate-950 tracking-tighter">
               Hi {firstName}
             </h2>
-            <p className="text-slate-500 font-bold text-[10px] tracking-widest uppercase">{activeTasksCount} active work</p>
+            <p className="text-slate-500 font-bold text-[10px] tracking-widest uppercase">{activeTasksCount} active items</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
@@ -191,7 +196,7 @@ export default function Dashboard() {
                       </div>
                     ) : !sortedTasks || sortedTasks.length === 0 ? (
                       <div className="text-center py-16 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                        <p>No data found.</p>
+                        <p>No records found.</p>
                       </div>
                     ) : (
                       sortedTasks.slice(0, 10).map((task) => (
@@ -215,11 +220,11 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            <div className="col-span-full order-3 md:-order-1 mb-2 md:mb-2">
+            <div className="col-span-full order-3 md:-order-1 mb-2">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard title="Active" value={activeTasksCount.toString()} change="Current" trend="neutral" icon={Zap} />
-                <StatCard title="Total Work" value={(rawTasks?.length || 0).toString()} change="Recent" trend="neutral" icon={Clock3} />
-                <StatCard title="Completed" value={completedTasksCount.toString()} change="Total" trend="up" icon={BarChart3} />
+                <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime" trend="neutral" icon={Clock3} />
+                <StatCard title="Completed" value={completedTasksCount.toString()} change="Closed" trend="up" icon={BarChart3} />
               </div>
             </div>
 
@@ -227,9 +232,9 @@ export default function Dashboard() {
               <div className="p-6 md:p-8 border border-slate-950 rounded-none bg-slate-950 text-white flex flex-col justify-between min-h-[180px] md:min-h-[200px]">
                 <div>
                   <h3 className="text-lg md:text-xl font-bold mb-2 uppercase tracking-tight">Workspace</h3>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Systematic audit trail for all field operations and jobs.</p>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Systematic audit trail for all high-precision field operations.</p>
                 </div>
-                <Link href="/tasks" className="mt-4"><Button className="w-full sm:w-fit bg-white text-slate-950 hover:bg-slate-200 font-bold uppercase text-[10px] tracking-widest px-8 rounded-none">Open Workspace</Button></Link>
+                <Link href="/tasks" className="mt-4"><Button className="w-full sm:w-fit bg-white text-slate-950 hover:bg-slate-200 font-bold uppercase text-[10px] tracking-widest px-8 rounded-none">Access Workspace</Button></Link>
               </div>
             </div>
           </div>

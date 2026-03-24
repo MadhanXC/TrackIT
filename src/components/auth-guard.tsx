@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser } from '@/firebase';
@@ -21,7 +20,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, isUserLoading, router, pathname]);
 
-  if (isUserLoading) {
+  // Prevent flash: If loading OR if we're in a redirect state
+  const isPublicPath = pathname === '/login' || pathname === '/signup';
+  const shouldShowLoader = isUserLoading || (!user && !isPublicPath) || (user && isPublicPath);
+
+  if (shouldShowLoader) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -32,5 +35,5 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
-}
+  // To strictly prevent any dashboard rendering before the route redirect happens
+  if (!user

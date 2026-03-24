@@ -1,10 +1,9 @@
-
 'use client';
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase"
-import { collection, query, orderBy, doc } from "firebase/firestore"
+import { collection, query, orderBy, doc, where } from "firebase/firestore"
 import { Badge } from "@/components/ui/badge"
 import { 
   Search, 
@@ -20,8 +19,7 @@ import {
   Truck,
   ClipboardCheck,
   FileText,
-  RotateCcw,
-  SlidersHorizontal
+  RotateCcw
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -81,9 +79,14 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = React.useState('newest');
   const [currentPage, setCurrentPage] = React.useState(1);
 
+  // Filtered by User ID for Isolation
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
-    return query(collection(firestore, 'workItems'), orderBy('createdAt', 'desc'));
+    return query(
+      collection(firestore, 'workItems'), 
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
   }, [firestore, isUserLoading, user]);
 
   const { data: rawTasks, isLoading } = useCollection(tasksQuery);
@@ -92,7 +95,6 @@ export default function TasksPage() {
     if (!rawTasks) return [];
     let filtered = [...rawTasks];
     
-    // Search Filter
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(t => 
@@ -101,15 +103,11 @@ export default function TasksPage() {
       );
     }
     
-    // Attribute Filters
     if (statusFilter !== 'all') filtered = filtered.filter(t => t.overallWorkStatus === statusFilter);
     if (typeFilter !== 'all') filtered = filtered.filter(t => t.workItemType === typeFilter);
     if (priorityFilter !== 'all') filtered = filtered.filter(t => t.priority === priorityFilter);
     if (sourceFilter !== 'all') filtered = filtered.filter(t => t.source === sourceFilter);
 
-    // Sort Logic
-    // Primary: Completed items go down
-    // Secondary: Based on user selection
     return filtered.sort((a, b) => {
       const isACompleted = a.overallWorkStatus === 'Completed';
       const isBCompleted = b.overallWorkStatus === 'Completed';
@@ -117,7 +115,6 @@ export default function TasksPage() {
       if (isACompleted && !isBCompleted) return 1;
       if (!isACompleted && isBCompleted) return -1;
       
-      // Secondary Sort inside the groups
       switch (sortBy) {
         case 'address-asc':
           return (a.siteAddressStreet || '').localeCompare(b.siteAddressStreet || '');
@@ -388,7 +385,7 @@ export default function TasksPage() {
                         </div>
                         <div className="flex items-center justify-between mt-4">
                           <Badge className={cn("text-[9px] font-bold rounded-none border-none px-3 uppercase tracking-widest", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950")}>{task.overallWorkStatus}</Badge>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated || 'Not Commenced'}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated || '—'}</span>
                         </div>
                       </div>
                     </div>
