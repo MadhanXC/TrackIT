@@ -26,7 +26,7 @@ export function StatCard({ title, value, change, icon: Icon, trend, className }:
             {change}
           </span>
         </div>
-        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</h3>
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</h3>
         <p className="text-2xl font-bold text-slate-950">{value}</p>
       </CardContent>
     </Card>

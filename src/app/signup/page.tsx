@@ -140,7 +140,7 @@ export default function SignupPage() {
               <UserPlus className="h-4 w-4 text-slate-400" />
               Join Workspace
             </CardTitle>
-            <CardDescription className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Invite-Only Profile Registration</CardDescription>
+            <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Invite-Only Profile Registration</CardDescription>
           </CardHeader>
           <CardContent className="pt-8">
             <Form {...form}>
@@ -155,9 +155,9 @@ export default function SignupPage() {
                         Invitation Code
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter unique code" {...field} className="h-12 border-primary/20 bg-primary/5 rounded-none font-bold uppercase text-[11px] focus:bg-white transition-all" />
+                        <Input placeholder="Enter unique code" {...field} className="h-12 border-primary/20 bg-primary/5 rounded-none font-bold uppercase text-[10px] focus:bg-white transition-all" />
                       </FormControl>
-                      <FormMessage className="text-[11px] font-bold" />
+                      <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
                   )}
                 />
@@ -168,9 +168,9 @@ export default function SignupPage() {
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Full Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="John Doe" {...field} className="h-12 border-slate-200 rounded-none font-bold text-[11px] bg-slate-50/50" />
+                        <Input placeholder="John Doe" {...field} className="h-12 border-slate-200 rounded-none font-bold text-[10px] bg-slate-50/50" />
                       </FormControl>
-                      <FormMessage className="text-[11px] font-bold" />
+                      <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
                   )}
                 />
@@ -181,9 +181,9 @@ export default function SignupPage() {
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Work Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="name@company.com" {...field} className="h-12 border-slate-200 rounded-none font-bold uppercase text-[11px] bg-slate-50/50" />
+                        <Input placeholder="name@company.com" {...field} className="h-12 border-slate-200 rounded-none font-bold uppercase text-[10px] bg-slate-50/50" />
                       </FormControl>
-                      <FormMessage className="text-[11px] font-bold" />
+                      <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
                   )}
                 />
@@ -194,13 +194,13 @@ export default function SignupPage() {
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Min. 6 characters" {...field} className="h-12 border-slate-200 rounded-none font-bold text-[11px] bg-slate-50/50" />
+                        <Input type="password" placeholder="Min. 6 characters" {...field} className="h-12 border-slate-200 rounded-none font-bold text-[10px] bg-slate-50/50" />
                       </FormControl>
-                      <FormMessage className="text-[11px] font-bold" />
+                      <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-14 bg-slate-950 text-white rounded-none font-bold uppercase text-[12px] tracking-widest shadow-none hover:bg-slate-800 transition-all" disabled={isLoading}>
+                <Button type="submit" className="w-full h-14 bg-slate-950 text-white rounded-none font-bold uppercase text-[11px] tracking-widest shadow-none hover:bg-slate-800 transition-all" disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Initiate Profile
                 </Button>
@@ -209,7 +209,7 @@ export default function SignupPage() {
           </CardContent>
           <CardFooter className="flex flex-col gap-6 pt-2 pb-8">
             <div className="h-px w-full bg-slate-50" />
-            <div className="text-[11px] font-bold uppercase tracking-widest text-center text-slate-400">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-center text-slate-400">
               Already authorized?{' '}
               <Link href="/login" className="text-slate-950 hover:underline">
                 Sign In
@@ -219,7 +219,7 @@ export default function SignupPage() {
         </Card>
         
         <div className="text-center">
-          <p className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.2em]">Secure Audit-Ready Environment v1.0</p>
+          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em]">Secure Audit-Ready Environment v1.0</p>
         </div>
       </div>
     </div>

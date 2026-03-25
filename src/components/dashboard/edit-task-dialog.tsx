@@ -205,11 +205,11 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
               <Layout className="h-5 w-5 text-white" />
             </div>
             <div className="flex flex-col text-left">
-              <DialogTitle className="text-base md:text-lg font-bold text-slate-950 uppercase tracking-tight">
+              <DialogTitle className="text-base md:text-[15px] font-bold text-slate-950 uppercase tracking-tight">
                 {readOnly ? 'Entry Details' : `Modify Item`}
               </DialogTitle>
               {!readOnly && (
-                <Badge variant="outline" className="text-[12px] font-bold text-slate-400 uppercase tracking-widest border-none px-0">Ref: {task.id.slice(0, 8)}</Badge>
+                <Badge variant="outline" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-none px-0">Ref: {task.id.slice(0, 8)}</Badge>
               )}
             </div>
           </div>
@@ -220,31 +220,31 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
             <div className="space-y-12">
               <div className="space-y-2 border-l-4 border-primary pl-6">
                 <h1 className="text-2xl md:text-3xl font-bold text-slate-950 leading-tight tracking-tight uppercase">{task.siteAddressStreet}</h1>
-                <p className="text-lg md:text-xl font-bold text-slate-400 uppercase tracking-widest">{task.title}</p>
+                <p className="text-[15px] md:text-[18px] font-bold text-slate-400 uppercase tracking-widest">{task.title}</p>
               </div>
               <div className="bg-slate-50 p-6 border border-slate-100">
                 <div className="space-y-2">
-                  <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <User className="h-3 w-3" /> Point of Contact
                   </p>
-                  <p className="text-sm font-bold text-slate-950 whitespace-pre-wrap">{task.pocName || 'No contact info provided'}</p>
+                  <p className="text-[14px] font-bold text-slate-950 whitespace-pre-wrap">{task.pocName || 'No contact info provided'}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 border-y border-slate-100 py-8">
                 <div className="space-y-1.5">
-                  <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Priority</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Priority</p>
                   <Badge variant="outline" className={cn("font-bold uppercase text-[12px] rounded-none border-none px-0", task.priority === 'Urgent' ? "text-red-600" : "text-slate-950")}>{task.priority}</Badge>
                 </div>
                 <div className="space-y-1.5">
-                  <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
                   <p className="font-bold text-slate-950 uppercase text-[12px]">{task.overallWorkStatus}</p>
                 </div>
                 <div className="space-y-1.5">
-                  <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Type</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type</p>
                   <p className="font-bold text-slate-950 uppercase text-[12px]">{task.workItemType}</p>
                 </div>
                 <div className="space-y-1.5">
-                  <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Source</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Source</p>
                   <p className="font-bold text-slate-950 uppercase text-[12px]">{task.source}</p>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <FileText className="h-4 w-4 text-primary" />
                     <h3 className="text-[12px] font-bold uppercase tracking-widest text-slate-950">Task Details</h3>
                   </div>
-                  <p className="text-sm font-medium text-slate-600 leading-relaxed bg-slate-50 p-6 border border-slate-100 whitespace-pre-wrap">{task.description || 'No description provided.'}</p>
+                  <p className="text-[14px] font-medium text-slate-600 leading-relaxed bg-slate-50 p-6 border border-slate-100 whitespace-pre-wrap">{task.description || 'No description provided.'}</p>
                 </div>
                 <div className="space-y-8">
                   <div className="space-y-6">
@@ -264,7 +264,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="p-4 border border-slate-100 bg-white">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase mb-2">Permit</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Permit</p>
                         <div className="flex flex-col">
                           <span className="text-[12px] font-bold text-slate-950 uppercase">{task.permitRequired ? task.permitStatus : 'N/A'}</span>
                           {task.permitRequired && (
@@ -273,7 +273,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         </div>
                       </div>
                       <div className="p-4 border border-slate-100 bg-white">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase mb-2">Survey</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Survey</p>
                         <div className="flex flex-col">
                           <span className="text-[12px] font-bold text-slate-950 uppercase">{task.surveyRequired ? task.surveyStatus : 'N/A'}</span>
                           {task.surveyRequired && (
@@ -290,18 +290,18 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 bg-slate-50 border border-slate-100">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Initiated</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Initiated</p>
                         <p className="text-[12px] font-bold text-slate-950">{task.dateInitiated || 'Not Commenced'}</p>
                       </div>
                       <div className="p-4 bg-slate-50 border border-slate-100">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase mb-1">Completed</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Completed</p>
                         <p className="text-[12px] font-bold text-slate-950">{task.dateCompleted || 'Not Completed'}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <Button onClick={() => setOpen(false)} className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-xs tracking-widest">Return to Workspace</Button>
+              <Button onClick={() => setOpen(false)} className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-sm tracking-widest">Return to Workspace</Button>
             </div>
           ) : (
             <Form {...form}>
@@ -312,10 +312,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     name="workItemType" 
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest">Type</FormLabel>
+                        <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Type</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -332,10 +332,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     name="priority" 
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest">Priority</FormLabel>
+                        <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Priority</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -351,10 +351,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     name="source" 
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest">Source</FormLabel>
+                        <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Source</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -372,13 +372,13 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                   name="pocName" 
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest flex items-center gap-2">
+                      <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
                         <User className="h-3 w-3" /> POC
                       </FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Contact details..." 
-                          className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" 
+                          className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none text-[14px]" 
                           {...field} 
                         />
                       </FormControl>
@@ -392,9 +392,9 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                   name="title" 
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest">Reference Title</FormLabel>
+                      <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Reference Title</FormLabel>
                       <FormControl>
-                        <Input className="border-slate-300 font-bold h-11 rounded-none" {...field} />
+                        <Input className="border-slate-300 font-bold h-11 rounded-none text-[14px]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -402,7 +402,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                 />
 
                 <div className="space-y-2 relative">
-                  <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest">Address</FormLabel>
+                  <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Address</FormLabel>
                   <FormField 
                     control={form.control} 
                     name="street1" 
@@ -412,7 +412,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <div className="relative">
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                             <Input 
-                              className="pl-10 border-slate-300 font-bold h-11 rounded-none" 
+                              className="pl-10 border-slate-300 font-bold h-11 rounded-none text-[14px]" 
                               {...field} 
                               autoComplete="off" 
                               onFocus={() => setIsInputFocused(true)} 
@@ -443,10 +443,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                   name="description" 
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest">Details</FormLabel>
+                      <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Details</FormLabel>
                       <FormControl>
                         <Textarea 
-                          className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" 
+                          className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none text-[14px]" 
                           {...field} 
                         />
                       </FormControl>
@@ -456,7 +456,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                 />
 
                 <div className="space-y-6 pt-6 border-t border-slate-100">
-                  <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Requirements</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Requirements</p>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <FormField 
                       control={form.control} 
@@ -466,7 +466,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <FormControl>
                             <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                           </FormControl>
-                          <FormLabel className="font-bold text-slate-950 text-[14px] uppercase cursor-pointer">Survey</FormLabel>
+                          <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Survey</FormLabel>
                         </FormItem>
                       )} 
                     />
@@ -478,7 +478,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <FormControl>
                             <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                           </FormControl>
-                          <FormLabel className="font-bold text-slate-950 text-[14px] uppercase cursor-pointer">Permit</FormLabel>
+                          <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Permit</FormLabel>
                         </FormItem>
                       )} 
                     />
@@ -490,7 +490,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <FormControl>
                             <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                           </FormControl>
-                          <FormLabel className="font-bold text-slate-950 text-[14px] uppercase cursor-pointer">Materials</FormLabel>
+                          <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Materials</FormLabel>
                         </FormItem>
                       )} 
                     />
@@ -502,7 +502,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <FormControl>
                             <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                           </FormControl>
-                          <FormLabel className="font-bold text-slate-950 text-[14px] uppercase cursor-pointer">Shipment</FormLabel>
+                          <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Shipment</FormLabel>
                         </FormItem>
                       )} 
                     />
@@ -515,10 +515,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="surveyHandledBy" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[12px] font-bold uppercase text-slate-500">Handled By</FormLabel>
+                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handled By</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[13px]">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -536,9 +536,9 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           name="surveyHandlerOthers" 
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[12px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
+                              <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
                               <FormControl>
-                                <Input className="h-9 border-slate-300 rounded-none font-bold text-[13px]" {...field} />
+                                <Input className="h-9 border-slate-300 rounded-none font-bold text-[12px]" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -550,10 +550,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="surveyStatus" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[12px] font-bold uppercase text-slate-500">Status</FormLabel>
+                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Status</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[13px]">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -574,10 +574,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="permitHandledBy" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[12px] font-bold uppercase text-slate-500">Handled By</FormLabel>
+                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handled By</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[13px]">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -595,9 +595,9 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           name="permitHandlerOthers" 
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[12px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
+                              <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
                               <FormControl>
-                                <Input className="h-9 border-slate-300 rounded-none font-bold text-[13px]" {...field} />
+                                <Input className="h-9 border-slate-300 rounded-none font-bold text-[12px]" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -609,10 +609,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="permitStatus" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[12px] font-bold uppercase text-slate-500">Status</FormLabel>
+                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Status</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[13px]">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -629,7 +629,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                   {materialsRequired && (
                     <div className="space-y-4 animate-in fade-in slide-in-from-top-1 bg-slate-50 p-4 border border-slate-200">
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-[12px] font-bold uppercase text-slate-500 flex items-center gap-2">
+                        <FormLabel className="text-[11px] font-bold uppercase text-slate-500 flex items-center gap-2">
                           <Package className="h-3 w-3" /> Inventory List
                         </FormLabel>
                         <Button 
@@ -637,7 +637,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           variant="outline" 
                           size="sm" 
                           onClick={() => append({ name: '', quantity: '1' })}
-                          className="h-8 rounded-none border-slate-950 font-bold uppercase text-[11px] tracking-widest"
+                          className="h-8 rounded-none border-slate-950 font-bold uppercase text-[10px] tracking-widest"
                         >
                           Add Item
                         </Button>
@@ -682,12 +682,12 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="shipmentStatus" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[12px] font-bold uppercase text-slate-500 flex items-center gap-2">
+                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500 flex items-center gap-2">
                               <Truck className="h-3 w-3" /> Shipment State
                             </FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[13px] bg-white">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px] bg-white">
                                   <SelectValue placeholder="Select state..." />
                                 </SelectTrigger>
                               </FormControl>
@@ -708,10 +708,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     name="confirmationStatus" 
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest">Confirmation</FormLabel>
+                        <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Confirmation</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -728,10 +728,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     name="overallWorkStatus" 
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest">State</FormLabel>
+                        <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">State</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -751,11 +751,11 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                       name="dateInitiated" 
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest flex items-center gap-2">
+                          <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
                             <Calendar className="h-3 w-3" /> Date Initiated
                           </FormLabel>
                           <FormControl>
-                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none" {...field} />
+                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[12px]" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -766,11 +766,11 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                       name="dateCompleted" 
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-slate-950 font-bold uppercase text-[12px] tracking-widest flex items-center gap-2">
+                          <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
                             <Calendar className="h-3 w-3" /> Date Completed
                           </FormLabel>
                           <FormControl>
-                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none" {...field} />
+                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[12px]" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -779,7 +779,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                   </div>
                 )}
 
-                <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-xs tracking-widest" disabled={isSubmitting}>
+                <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-sm tracking-widest" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />} Update Changes
                 </Button>
               </form>

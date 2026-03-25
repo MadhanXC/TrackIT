@@ -298,13 +298,13 @@ export function ReportDialog() {
     <div className="w-full lg:w-[350px] border-b lg:border-b-0 lg:border-r border-slate-100 p-4 sm:p-6 space-y-6 bg-slate-50/50 shrink-0 overflow-y-auto">
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-l-4 border-primary pl-3">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Audit Controls</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Audit Controls</h3>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2 space-y-1.5">
             <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Date Basis</Label>
             <Select value={basis} onValueChange={(v: any) => setBasis(v)}>
-              <SelectTrigger className="h-9 rounded-none border-slate-200 font-bold text-[11px] uppercase bg-white"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white"><SelectValue /></SelectTrigger>
               <SelectContent className="rounded-none">
                 <SelectItem value="createdAt">Date Created</SelectItem>
                 <SelectItem value="dateInitiated">Date Initiated</SelectItem>
@@ -314,7 +314,7 @@ export function ReportDialog() {
           <div className="col-span-2 space-y-1.5">
             <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Interval</Label>
             <Select value={timeFrame} onValueChange={setTimeFrame}>
-              <SelectTrigger className="h-9 rounded-none border-slate-200 font-bold text-[11px] uppercase bg-white"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white"><SelectValue /></SelectTrigger>
               <SelectContent className="rounded-none">
                 <SelectItem value="all">Full History</SelectItem>
                 <SelectItem value="daily">Daily</SelectItem>
@@ -330,11 +330,11 @@ export function ReportDialog() {
             <>
               <div className="col-span-2 sm:col-span-1 space-y-1.5">
                 <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">From</Label>
-                <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="h-9 rounded-none border-slate-200 bg-white text-[11px] font-bold" />
+                <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="h-9 rounded-none border-slate-200 bg-white text-[10px] font-bold" />
               </div>
               <div className="col-span-2 sm:col-span-1 space-y-1.5">
                 <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">To</Label>
-                <Input type="date" value={toDate} onChange={(e) => setDateTo(e.target.value)} className="h-9 rounded-none border-slate-200 bg-white text-[11px] font-bold" />
+                <Input type="date" value={toDate} onChange={(e) => setDateTo(e.target.value)} className="h-9 rounded-none border-slate-200 bg-white text-[10px] font-bold" />
               </div>
             </>
           )}
@@ -343,7 +343,7 @@ export function ReportDialog() {
 
       <div className="space-y-4 pt-6 border-t border-slate-200">
         <div className="flex items-center gap-2 border-l-4 border-primary pl-3">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Data Inclusion</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Data Inclusion</h3>
         </div>
         <div className="grid grid-cols-1 gap-2">
           {[
@@ -355,7 +355,7 @@ export function ReportDialog() {
           ].map(item => (
             <div key={item.id} className="flex items-center space-x-3 bg-white p-3 border border-slate-100">
               <Checkbox id={item.id} checked={item.s} onCheckedChange={(v) => item.f(!!v)} className="rounded-none border-slate-300" />
-              <Label htmlFor={item.id} className="text-[11px] font-bold uppercase cursor-pointer">{item.l}</Label>
+              <Label htmlFor={item.id} className="text-[10px] font-bold uppercase cursor-pointer">{item.l}</Label>
             </div>
           ))}
         </div>
@@ -365,7 +365,7 @@ export function ReportDialog() {
          <div className="p-4 bg-slate-950 text-white space-y-1">
            <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-50">Auditing Selection</p>
            <p className="text-xl font-bold">{selectedIds.size > 0 ? selectedIds.size : filteredTasks.length}</p>
-           <p className="text-[9px] font-bold uppercase tracking-widest opacity-70">
+           <p className="text-[10px] font-bold uppercase tracking-widest opacity-70">
              {selectedIds.size > 0 ? "Targeted Items" : "Full Scope Matches"}
            </p>
          </div>
@@ -379,17 +379,17 @@ export function ReportDialog() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-40 gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-slate-200" />
-            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">Compiling Intelligence...</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Compiling Intelligence...</p>
           </div>
         ) : !filteredTasks.length ? (
           <div className="text-center py-40 border border-dashed border-slate-200 bg-slate-50">
-            <p className="text-slate-400 uppercase font-bold text-[11px] tracking-widest">No matching records.</p>
+            <p className="text-slate-400 uppercase font-bold text-[10px] tracking-widest">No matching records.</p>
           </div>
         ) : (
           <div className="space-y-12">
             <div className="flex flex-col gap-2 border-l-4 border-slate-950 pl-6">
               <h2 className="text-2xl font-bold text-slate-950 uppercase tracking-tight">Audit Log Preview</h2>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 <span>Basis: {basis === 'createdAt' ? 'Date Created' : 'Date Initiated'}</span>
                 <span className="hidden sm:inline">•</span>
                 <span>Period: {fromDate ? format(new Date(fromDate), "PPP") : "Full History"}</span>
@@ -439,15 +439,15 @@ export function ReportDialog() {
                       <td className="px-4 py-4 border-r font-bold">
                         <div className="flex flex-col">
                           <span>{task.siteAddressStreet}</span>
-                          <span className="text-[8px] text-slate-400 uppercase mt-1 leading-none">{task.title}</span>
+                          <span className="text-[9px] text-slate-400 uppercase mt-1 leading-none">{task.title}</span>
                         </div>
                       </td>
                       {includePOC && <td className="px-4 py-4 border-r whitespace-pre-wrap">{task.pocName || '—'}</td>}
                       <td className="px-4 py-4 border-r uppercase font-bold">{task.workItemType}</td>
                       <td className="px-4 py-4 border-r uppercase font-bold">{task.overallWorkStatus}</td>
-                      {includeSurvey && <td className="px-4 py-4 border-r"><div className="flex flex-col"><span className="font-bold uppercase">{task.surveyRequired ? task.surveyStatus : 'N/A'}</span>{task.surveyRequired && <span className="text-[8px] text-primary font-bold uppercase mt-0.5">{task.surveyHandler}</span>}</div></td>}
-                      {includePermit && <td className="px-4 py-4 border-r"><div className="flex flex-col"><span className="font-bold uppercase">{task.permitRequired ? task.permitStatus : 'N/A'}</span>{task.permitRequired && <span className="text-[8px] text-primary font-bold uppercase mt-0.5">{task.permitHandler}</span>}</div></td>}
-                      {includeMaterials && <td className="px-4 py-4 border-r"><div className="flex flex-col gap-0.5">{task.materialsRequired && task.materialsList?.length > 0 ? task.materialsList.map((m: any, i: number) => <span key={i} className="text-[8px] font-bold uppercase leading-tight bg-slate-50 px-1 py-0.5 border border-slate-100 truncate">{m.name} (x{m.quantity})</span>) : 'None'}</div></td>}
+                      {includeSurvey && <td className="px-4 py-4 border-r"><div className="flex flex-col"><span className="font-bold uppercase">{task.surveyRequired ? task.surveyStatus : 'N/A'}</span>{task.surveyRequired && <span className="text-[10px] text-primary font-bold uppercase mt-0.5">{task.surveyHandler}</span>}</div></td>}
+                      {includePermit && <td className="px-4 py-4 border-r"><div className="flex flex-col"><span className="font-bold uppercase">{task.permitRequired ? task.permitStatus : 'N/A'}</span>{task.permitRequired && <span className="text-[10px] text-primary font-bold uppercase mt-0.5">{task.permitHandler}</span>}</div></td>}
+                      {includeMaterials && <td className="px-4 py-4 border-r"><div className="flex flex-col gap-0.5">{task.materialsRequired && task.materialsList?.length > 0 ? task.materialsList.map((m: any, i: number) => <span key={i} className="text-[10px] font-bold uppercase leading-tight bg-slate-50 px-1 py-0.5 border border-slate-100 truncate">{m.name} (x{m.quantity})</span>) : 'None'}</div></td>}
                       {includeShipment && <td className="px-4 py-4 border-r uppercase font-bold">{task.shipmentRequired ? task.shipmentStatus : 'N/A'}</td>}
                       <td className="px-4 py-4 border-r font-bold">{task.createdAt ? format(new Date(task.createdAt), "yyyy-MM-dd") : '—'}</td>
                       <td className="px-4 py-4 border-r font-bold">{task.dateInitiated || '—'}</td>
@@ -473,7 +473,7 @@ export function ReportDialog() {
                     <div key={i} className="p-4 bg-slate-50/50 border border-slate-100">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{m.l}</p>
                       <p className="text-xl font-bold text-slate-950">{m.v}</p>
-                      {m.s && <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">{m.s}</p>}
+                      {m.s && <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">{m.s}</p>}
                     </div>
                   ))}
                 </div>
@@ -488,7 +488,7 @@ export function ReportDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="font-bold border-slate-950 rounded-none h-10 px-6 uppercase text-[11px] tracking-widest">
+        <Button variant="outline" size="sm" className="font-bold border-slate-950 rounded-none h-10 px-6 uppercase text-[10px] tracking-widest">
           <FileText className="h-4 w-4 mr-2" /> Report
         </Button>
       </DialogTrigger>
@@ -501,13 +501,13 @@ export function ReportDialog() {
             <DialogTitle className="text-base sm:text-xl font-bold uppercase tracking-tight">Report Generator</DialogTitle>
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-            <Button variant="ghost" size="sm" onClick={() => { setBasis("createdAt"); setTimeFrame("all"); setSelectedIds(new Set()); }} className="font-bold rounded-none h-10 px-3 uppercase text-[11px] tracking-widest text-slate-400 hover:text-slate-950 shrink-0">
+            <Button variant="ghost" size="sm" onClick={() => { setBasis("createdAt"); setTimeFrame("all"); setSelectedIds(new Set()); }} className="font-bold rounded-none h-10 px-3 uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-950 shrink-0">
               <RotateCcw className="h-4 w-4 mr-2" /> Reset
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportExcel} className="font-bold rounded-none h-10 px-3 uppercase text-[11px] tracking-widest border-slate-950 text-slate-950 hover:bg-slate-50 shrink-0">
+            <Button variant="outline" size="sm" onClick={handleExportExcel} className="font-bold rounded-none h-10 px-3 uppercase text-[10px] tracking-widest border-slate-950 text-slate-950 hover:bg-slate-50 shrink-0">
               <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel
             </Button>
-            <Button variant="default" size="sm" onClick={handleExportPdf} disabled={isExporting} className="font-bold rounded-none h-10 px-3 uppercase text-[11px] tracking-widest bg-slate-950 text-white shadow-none shrink-0 min-w-[100px]">
+            <Button variant="default" size="sm" onClick={handleExportPdf} disabled={isExporting} className="font-bold rounded-none h-10 px-3 uppercase text-[10px] tracking-widest bg-slate-950 text-white shadow-none shrink-0 min-w-[100px]">
               {isExporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4 mr-2" />} {isExporting ? 'Generating...' : 'PDF'}
             </Button>
           </div>
@@ -523,10 +523,10 @@ export function ReportDialog() {
         <div className="flex lg:hidden flex-1 overflow-hidden min-h-0">
           <Tabs defaultValue="config" className="w-full flex flex-col h-full">
             <TabsList className="grid w-full grid-cols-2 rounded-none bg-slate-100 h-12 p-0">
-              <TabsTrigger value="config" className="rounded-none h-full data-[state=active]:bg-white data-[state=active]:text-slate-950 font-bold uppercase text-[11px] tracking-widest">
+              <TabsTrigger value="config" className="rounded-none h-full data-[state=active]:bg-white data-[state=active]:text-slate-950 font-bold uppercase text-[10px] tracking-widest">
                 <Settings2 className="h-3.5 w-3.5 mr-2" /> Configure
               </TabsTrigger>
-              <TabsTrigger value="preview" className="rounded-none h-full data-[state=active]:bg-white data-[state=active]:text-slate-950 font-bold uppercase text-[11px] tracking-widest">
+              <TabsTrigger value="preview" className="rounded-none h-full data-[state=active]:bg-white data-[state=active]:text-slate-950 font-bold uppercase text-[10px] tracking-widest">
                 <Eye className="h-3.5 w-3.5 mr-2" /> Preview
               </TabsTrigger>
             </TabsList>

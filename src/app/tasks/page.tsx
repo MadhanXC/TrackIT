@@ -123,10 +123,10 @@ export default function TasksPage() {
         case 'priority-desc':
           return (PRIORITY_RANK[b.priority] || 0) - (PRIORITY_RANK[a.priority] || 0);
         case 'oldest':
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
         case 'newest':
         default:
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime();
       }
     });
   }, [rawTasks, searchTerm, statusFilter, typeFilter, priorityFilter, sourceFilter, sortBy]);
@@ -157,9 +157,9 @@ export default function TasksPage() {
         <header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 md:px-6 border-b border-slate-100 bg-white sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
-            <div className="flex flex-col border-l-4 border-primary pl-3">
-              <h1 className="text-sm md:text-lg font-bold text-slate-950 font-headline uppercase tracking-tight">Workspace</h1>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Active Pipeline Management</span>
+            <div className="flex flex-col">
+              <h1 className="text-[15px] md:text-[18px] font-bold text-slate-950 font-headline uppercase tracking-tight leading-none">Workspace</h1>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block mt-1">Active Pipeline Management</span>
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
@@ -175,7 +175,7 @@ export default function TasksPage() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input 
                   placeholder="Filter by location or title..." 
-                  className="pl-11 h-12 border-slate-200 shadow-none rounded-none text-slate-950 font-bold focus:border-primary transition-all w-full" 
+                  className="pl-11 h-12 border-slate-200 shadow-none rounded-none text-slate-950 font-bold focus:border-primary transition-all w-full text-[13px]" 
                   value={searchTerm} 
                   onChange={(e) => setSearchTerm(e.target.value)} 
                 />
@@ -184,13 +184,13 @@ export default function TasksPage() {
                 <Button 
                   variant="outline" 
                   onClick={handleResetFilters} 
-                  className="h-12 rounded-none border-slate-200 text-[11px] font-bold uppercase tracking-widest px-4 hover:bg-slate-50"
+                  className="h-12 rounded-none border-slate-200 text-[10px] font-bold uppercase tracking-widest px-4 hover:bg-slate-50"
                 >
-                  <RotateCcw className="h-3.5 w-3.5 mr-2" /> Reset
+                  <RotateCcw className="h-4 w-4 mr-2" /> Reset
                 </Button>
                 <div className="flex items-center gap-1 border border-slate-200 rounded-none p-1 h-12 bg-white">
-                  <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('list')} className="h-10 w-10 rounded-none"><ListIcon className="h-4 w-4" /></Button>
-                  <Button variant={viewMode === 'card' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('card')} className="h-10 w-10 rounded-none"><LayoutGrid className="h-4 w-4" /></Button>
+                  <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('list')} className="h-10 w-10 rounded-none"><ListIcon className="h-5 w-5" /></Button>
+                  <Button variant={viewMode === 'card' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('card')} className="h-10 w-10 rounded-none"><LayoutGrid className="h-5 w-5" /></Button>
                 </div>
               </div>
             </div>
@@ -252,7 +252,7 @@ export default function TasksPage() {
             </div>
 
             <div className="flex items-center justify-between pt-2">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 {filteredTasks.length} Resulting Items
               </span>
             </div>
@@ -262,24 +262,24 @@ export default function TasksPage() {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-32 gap-4">
                 <Loader2 className="h-10 w-10 animate-spin text-slate-200" />
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">Syncing Workspace...</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Syncing Workspace...</p>
               </div>
             ) : !paginatedTasks.length ? (
               <div className="rounded-none border border-dashed border-slate-200 py-16 md:py-32 px-4 text-center bg-slate-50">
-                <h3 className="text-slate-950 font-bold mb-2">No items in scope</h3>
-                <p className="text-[11px] text-slate-500 mb-6 uppercase tracking-widest">Adjust filters or search parameters.</p>
-                <Button variant="outline" size="sm" onClick={handleResetFilters} className="font-bold border-slate-950 rounded-none uppercase text-[11px] tracking-widest px-6 h-10">Reset Filters</Button>
+                <h3 className="text-slate-950 font-bold mb-2 text-[14px]">No items in scope</h3>
+                <p className="text-[10px] text-slate-500 mb-6 uppercase tracking-widest">Adjust filters or search parameters.</p>
+                <Button variant="outline" size="sm" onClick={handleResetFilters} className="font-bold border-slate-950 rounded-none uppercase text-[10px] tracking-widest px-6 h-11">Reset Filters</Button>
               </div>
             ) : viewMode === 'list' ? (
               <div className="rounded-none border border-slate-200 overflow-x-auto bg-white scrollbar-hide">
                 <Table className="min-w-full md:min-w-[1400px]">
                   <TableHeader className="bg-slate-50 border-b border-slate-200 hidden md:table-header-group">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="font-bold text-slate-950 py-5 pl-8 w-12 text-center text-[11px] tracking-widest">#</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase w-1/4 text-[11px] tracking-widest">Address - Title</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[11px] tracking-widest">Task Details</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[11px] tracking-widest text-center">Status</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 text-right pr-8 uppercase text-[11px] tracking-widest">Manage</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 pl-8 w-12 text-center text-[10px] tracking-widest uppercase">#</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 w-1/4 text-[10px] tracking-widest uppercase">ADDRESS - TITLE</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest">TASK DETAILS</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest text-center">STATUS</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 text-right pr-8 uppercase text-[10px] tracking-widest">MANAGE</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -287,21 +287,21 @@ export default function TasksPage() {
                       const sequentialNumber = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
                       return (
                         <TableRow key={task.id} className="hover:bg-slate-50/50 border-slate-100 group transition-all flex flex-col md:table-row p-4 md:p-0">
-                          <TableCell className="py-6 pl-8 font-bold text-slate-400 text-[11px] text-center hidden md:table-cell">{sequentialNumber}</TableCell>
+                          <TableCell className="py-6 pl-8 font-bold text-slate-400 text-[10px] text-center hidden md:table-cell">{sequentialNumber}</TableCell>
                           <TableCell className="py-2 md:py-6 align-top">
                             <div className="flex flex-col gap-1.5">
-                              <span className="font-bold text-slate-950 text-sm md:text-base leading-tight tracking-tight">
+                              <span className="font-bold text-slate-950 text-[13px] leading-tight tracking-tight uppercase">
                                 {task.siteAddressStreet} - {task.title}
                               </span>
                               <div className="flex items-center gap-3">
-                                <Badge variant="outline" className="text-[10px] font-bold text-slate-500 border-slate-200 rounded-none uppercase">{task.workItemType}</Badge>
+                                <Badge variant="outline" className="text-[10px] font-bold text-slate-500 border-slate-200 rounded-none uppercase">TYPE: {task.workItemType}</Badge>
                                 <Badge variant="outline" className={cn(
                                   "text-[10px] font-bold border-none rounded-none uppercase",
                                   task.priority === 'Urgent' ? "bg-red-50 text-red-700" : "text-slate-500 border-slate-200"
                                 )}>
-                                  {task.priority}
+                                  {task.priority} PRIORITY
                                 </Badge>
-                                <Badge variant="outline" className="text-[10px] font-bold text-slate-500 border-slate-200 rounded-none uppercase">Source: {task.source}</Badge>
+                                <Badge variant="outline" className="text-[10px] font-bold text-slate-500 border-slate-200 rounded-none uppercase">SOURCE: {task.source}</Badge>
                               </div>
                             </div>
                           </TableCell>
@@ -309,22 +309,22 @@ export default function TasksPage() {
                             <div className="flex flex-wrap gap-2 max-w-md">
                               {task.permitRequired && (
                                 <div className="flex flex-col gap-0.5">
-                                  <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase">Permit: {task.permitStatus}</Badge>
-                                  <span className="text-[9px] font-bold text-primary uppercase ml-1">By: {task.permitHandler}</span>
+                                  <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase px-2">PERMIT: {task.permitStatus}</Badge>
+                                  <span className="text-[10px] font-bold text-primary uppercase ml-1">BY: {task.permitHandler}</span>
                                 </div>
                               )}
                               {task.surveyRequired && (
                                 <div className="flex flex-col gap-0.5">
-                                  <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase">Survey: {task.surveyStatus}</Badge>
-                                  <span className="text-[9px] font-bold text-primary uppercase ml-1">By: {task.surveyHandler}</span>
+                                  <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase px-2">SURVEY: {task.surveyStatus}</Badge>
+                                  <span className="text-[10px] font-bold text-primary uppercase ml-1">BY: {task.surveyHandler}</span>
                                 </div>
                               )}
                               {task.materialsRequired && (
-                                <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase">Materials: {task.materialsList?.length || 0}</Badge>
+                                <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase px-2">MATERIALS: {task.materialsList?.length || 0}</Badge>
                               )}
                               {task.shipmentRequired && (
                                 <Badge variant="outline" className="text-[10px] font-bold bg-slate-950 text-white border-none rounded-none h-6 uppercase px-2 flex items-center gap-1.5">
-                                  <Truck className="h-2.5 w-2.5" />
+                                  <Truck className="h-3 w-3" />
                                   {task.shipmentStatus}
                                 </Badge>
                               )}
@@ -332,26 +332,26 @@ export default function TasksPage() {
                           </TableCell>
                           <TableCell className="py-2 md:py-6 align-top">
                             <div className="flex flex-row md:flex-col gap-1 items-center justify-between md:justify-center">
-                              <Badge className={cn("text-[11px] font-bold rounded-none h-6 uppercase px-3", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950 border-none")}>
+                              <Badge className={cn("text-[10px] font-bold rounded-none h-6 uppercase px-3", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950 border-none")}>
                                 {task.overallWorkStatus}
                               </Badge>
                               <div className="flex flex-col gap-0.5 mt-1 text-right md:text-center">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Created: {task.createdAt ? format(new Date(task.createdAt), "MM/dd/yy") : '—'}</span>
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated ? `Started: ${task.dateInitiated}` : ''}</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">CREATED: {task.createdAt ? format(new Date(task.createdAt), "MM/dd/yy") : '—'}</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated ? `STARTED: ${task.dateInitiated}` : ''}</span>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell className="py-4 md:py-6 text-right pr-0 md:pr-8 align-top">
                             <div className="flex justify-end gap-1 md:opacity-20 md:group-hover:opacity-100 transition-opacity">
-                              <EditTaskDialog task={task} readOnly={true} trigger={<Button variant="ghost" size="icon" className="h-9 w-9 text-slate-950 hover:bg-slate-100 rounded-none"><Eye className="h-4 w-4" /></Button>} />
-                              <EditTaskDialog task={task} trigger={<Button variant="ghost" size="icon" className="h-9 w-9 text-slate-950 hover:bg-slate-100 rounded-none"><Pencil className="h-4 w-4" /></Button>} />
+                              <EditTaskDialog task={task} readOnly={true} trigger={<Button variant="ghost" size="icon" className="h-10 w-10 text-slate-950 hover:bg-slate-100 rounded-none"><Eye className="h-5 w-5" /></Button>} />
+                              <EditTaskDialog task={task} trigger={<Button variant="ghost" size="icon" className="h-10 w-10 text-slate-950 hover:bg-slate-100 rounded-none"><Pencil className="h-5 w-5" /></Button>} />
                               <AlertDialog>
-                                <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/5 rounded-none"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                                <AlertDialogContent className="rounded-none border-slate-200">
-                                  <AlertDialogHeader><AlertDialogTitle className="font-bold text-slate-950">Remove Entry?</AlertDialogTitle></AlertDialogHeader>
+                                <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/5 rounded-none"><Trash2 className="h-5 w-5" /></Button></AlertDialogTrigger>
+                                <AlertDialogContent className="rounded-none border-slate-200 shadow-none">
+                                  <AlertDialogHeader><AlertDialogTitle className="font-bold text-slate-950 text-[15px] uppercase">Remove Entry?</AlertDialogTitle></AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel className="font-bold rounded-none border-slate-200">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(task.id)} className="bg-destructive text-white font-bold rounded-none">Confirm</AlertDialogAction>
+                                    <AlertDialogCancel className="font-bold rounded-none border-slate-200 text-[10px] uppercase tracking-widest">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(task.id)} className="bg-destructive text-white font-bold rounded-none text-[10px] uppercase tracking-widest">Confirm</AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
@@ -375,7 +375,7 @@ export default function TasksPage() {
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-[10px] font-bold text-slate-400 border-slate-100 rounded-none uppercase tracking-widest">{task.workItemType}</Badge>
                             <Badge className={cn(
-                              "text-[9px] font-bold border-none rounded-none uppercase",
+                              "text-[10px] font-bold border-none rounded-none uppercase",
                               task.priority === 'Urgent' ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-500"
                             )}>
                               {task.priority}
@@ -388,25 +388,25 @@ export default function TasksPage() {
                         </div>
                       </div>
                       <div className="flex-1 space-y-3 mb-8">
-                        <h3 className="text-base md:text-lg font-bold text-slate-950 leading-tight group-hover:text-primary transition-colors tracking-tight">
+                        <h3 className="text-[13px] font-bold text-slate-950 leading-tight group-hover:text-primary transition-colors tracking-tight uppercase">
                           {task.siteAddressStreet}
                         </h3>
-                        <p className="text-sm font-bold text-slate-500">{task.title}</p>
-                        <p className="text-sm font-medium text-slate-400 line-clamp-2 leading-relaxed mt-2">{task.description}</p>
+                        <p className="text-[11px] font-bold text-slate-500 uppercase">{task.title}</p>
+                        <p className="text-[12px] font-medium text-slate-400 line-clamp-2 leading-relaxed mt-2">{task.description}</p>
                       </div>
                       
                       <div className="space-y-4 pt-6 border-t border-slate-50">
                         <div className="grid grid-cols-2 gap-2">
-                          {task.permitRequired && <div className="flex items-center gap-1.5"><ClipboardCheck className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">Permit: {task.permitStatus}</span></div>}
-                          {task.surveyRequired && <div className="flex items-center gap-1.5"><FileText className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">Survey: {task.surveyStatus}</span></div>}
-                          {task.materialsRequired && <div className="flex items-center gap-1.5"><Package className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">Inv: {task.materialsList?.length || 0}</span></div>}
+                          {task.permitRequired && <div className="flex items-center gap-1.5"><ClipboardCheck className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">PERMIT: {task.permitStatus}</span></div>}
+                          {task.surveyRequired && <div className="flex items-center gap-1.5"><FileText className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">SURVEY: {task.surveyStatus}</span></div>}
+                          {task.materialsRequired && <div className="flex items-center gap-1.5"><Package className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">INV: {task.materialsList?.length || 0}</span></div>}
                           {task.shipmentRequired && <div className="flex items-center gap-1.5"><Truck className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">{task.shipmentStatus}</span></div>}
                         </div>
                         <div className="flex items-center justify-between mt-4">
-                          <Badge className={cn("text-[10px] font-bold rounded-none border-none px-3 uppercase tracking-widest", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950")}>
+                          <Badge className={cn("text-[10px] font-bold rounded-none border-none px-3 h-6 uppercase tracking-widest", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950")}>
                             {task.overallWorkStatus}
                           </Badge>
-                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated || 'Not Commenced'}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated || 'NOT COMMENCED'}</span>
                         </div>
                       </div>
                     </div>
@@ -423,11 +423,11 @@ export default function TasksPage() {
                 size="sm" 
                 disabled={currentPage === 1} 
                 onClick={() => { setCurrentPage(prev => Math.max(1, prev - 1)); window.scrollTo({ top: 0 }); }} 
-                className="w-full md:w-auto font-bold rounded-none border-slate-200 h-10 px-6 uppercase text-[11px] tracking-widest"
+                className="w-full md:w-auto font-bold rounded-none border-slate-200 h-11 px-6 uppercase text-[10px] tracking-widest"
               >
-                <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+                <ChevronLeft className="h-5 w-5 mr-2" /> Previous
               </Button>
-              <span className="text-[11px] font-bold text-slate-950 uppercase tracking-widest min-w-[120px] text-center">
+              <span className="text-[10px] font-bold text-slate-950 uppercase tracking-widest min-w-[120px] text-center">
                 Page {currentPage} of {totalPages}
               </span>
               <Button 
@@ -435,9 +435,9 @@ export default function TasksPage() {
                 size="sm" 
                 disabled={currentPage === totalPages} 
                 onClick={() => { setCurrentPage(prev => Math.min(totalPages, prev + 1)); window.scrollTo({ top: 0 }); }} 
-                className="w-full md:w-auto font-bold rounded-none border-slate-200 h-10 px-6 uppercase text-[11px] tracking-widest"
+                className="w-full md:w-auto font-bold rounded-none border-slate-200 h-11 px-6 uppercase text-[10px] tracking-widest"
               >
-                Next <ChevronRight className="h-4 w-4 ml-2" />
+                Next <ChevronRight className="h-5 w-5 ml-2" />
               </Button>
             </div>
           )}
