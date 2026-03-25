@@ -38,7 +38,8 @@ import {
   startOfMonth,
   endOfMonth,
   startOfYear,
-  endOfYear
+  endOfYear,
+  parseISO
 } from "date-fns"
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase"
 import { collection, query, where } from "firebase/firestore"
@@ -117,18 +118,31 @@ export function ReportDialog() {
 
   const filteredTasks = React.useMemo(() => {
     if (!rawTasks) return [];
+    
     let filtered = rawTasks.filter(task => {
       if (typeFilter !== "all" && task.workItemType !== typeFilter) return false;
       if (statusFilter !== "all" && task.overallWorkStatus !== statusFilter) return false;
       if (priorityFilter !== "all" && task.priority !== priorityFilter) return false;
       if (sourceFilter !== "all" && task.source !== sourceFilter) return false;
       
-      const taskDateStr = task[basis];
-      if (fromDate && taskDateStr) {
-        const taskDate = new Date(taskDateStr);
-        const start = startOfDay(new Date(fromDate));
-        const end = toDate ? endOfDay(new Date(toDate)) : endOfDay(new Date(fromDate));
-        if (!isWithinInterval(taskDate, { start, end })) return false;
+      const rawValue = task[basis];
+      if (!rawValue && timeFrame !== "all") return false;
+      
+      if (timeFrame !== "all" && fromDate) {
+        try {
+          const taskDate = typeof rawValue === 'string' && rawValue.includes('T') 
+            ? parseISO(rawValue) 
+            : new Date(rawValue);
+          
+          if (isNaN(taskDate.getTime())) return false;
+
+          const start = startOfDay(new Date(fromDate));
+          const end = toDate ? endOfDay(new Date(toDate)) : endOfDay(new Date(fromDate));
+          
+          if (!isWithinInterval(taskDate, { start, end })) return false;
+        } catch (e) {
+          return false;
+        }
       }
       return true;
     });
@@ -140,7 +154,7 @@ export function ReportDialog() {
       if (!isACompleted && isBCompleted) return -1;
       return 0;
     });
-  }, [rawTasks, typeFilter, statusFilter, priorityFilter, sourceFilter, fromDate, toDate, basis])
+  }, [rawTasks, typeFilter, statusFilter, priorityFilter, sourceFilter, fromDate, toDate, basis, timeFrame])
 
   const reportTasks = React.useMemo(() => {
     if (selectedIds.size === 0) return filteredTasks;
@@ -173,10 +187,11 @@ export function ReportDialog() {
       printRoot.innerHTML = '';
       const clone = contentNode.cloneNode(true) as HTMLElement;
       printRoot.appendChild(clone);
+      
       setTimeout(() => {
         window.print();
         printRoot.innerHTML = '';
-      }, 600);
+      }, 1000);
     }
   }
 
@@ -291,7 +306,7 @@ export function ReportDialog() {
           </div>
         </DialogHeader>
 
-        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden min-h-0">
           {/* Configuration Panel */}
           <div className="w-full lg:w-[350px] border-b lg:border-b-0 lg:border-r border-slate-100 p-4 sm:p-6 space-y-6 print:hidden bg-slate-50/50 shrink-0 lg:overflow-y-auto">
             <div className="space-y-4">
@@ -345,13 +360,13 @@ export function ReportDialog() {
                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Report Composition</h3>
               </div>
               <div className="grid grid-cols-1 gap-2">
-                <div className="flex items-center space-x-3 bg-white p-3 border border-slate-100">
+                <div className="hidden lg:flex items-center space-x-3 bg-white p-3 border border-slate-100">
                   <Checkbox id="stats-t" checked={includeStats} onCheckedChange={(v) => setIncludeStats(!!v)} className="rounded-none" />
-                  <Label htmlFor="stats-t" className="text-[10px] font-bold uppercase cursor-pointer">Metrics</Label>
+                  <Label htmlFor="stats-t" className="text-[10px] font-bold uppercase cursor-pointer">Intelligence Metrics</Label>
                 </div>
-                <div className="flex items-center space-x-3 bg-white p-3 border border-slate-100">
+                <div className="hidden lg:flex items-center space-x-3 bg-white p-3 border border-slate-100">
                   <Checkbox id="charts-t" checked={includeCharts} onCheckedChange={(v) => setIncludeCharts(!!v)} className="rounded-none" />
-                  <Label htmlFor="charts-t" className="text-[10px] font-bold uppercase cursor-pointer">Distribution</Label>
+                  <Label htmlFor="charts-t" className="text-[10px] font-bold uppercase cursor-pointer">Visual Distribution</Label>
                 </div>
                 <div className="flex items-center space-x-3 bg-white p-3 border border-slate-100">
                   <Checkbox id="poc-t" checked={includePOC} onCheckedChange={(v) => setIncludePOC(!!v)} className="rounded-none" />
@@ -412,7 +427,7 @@ export function ReportDialog() {
           </div>
 
           {/* Report Preview */}
-          <div className="flex-1 bg-white overflow-y-auto lg:overflow-y-auto min-h-0">
+          <div className="flex-1 bg-white overflow-y-auto min-h-0 lg:h-full relative">
             <div className="p-4 sm:p-8" ref={reportRef}>
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-40 gap-4">
@@ -435,7 +450,7 @@ export function ReportDialog() {
                   </div>
 
                   {includeStats && stats && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="hidden lg:grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
                       <div className="bg-slate-50 p-8 border border-slate-200 space-y-4">
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Audited Units</p>
                         <p className="text-4xl font-bold text-slate-950">{stats.total}</p>
@@ -452,14 +467,14 @@ export function ReportDialog() {
                   )}
 
                   {includeCharts && stats && (
-                    <div className="space-y-6">
+                    <div className="hidden lg:block space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Lifecycle Distribution</h3>
                       <div className="h-[300px] w-full bg-slate-50 p-6 border border-slate-100">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={stats.statusData}>
-                            <XAxis dataKey="name" tick={{ fontSize: 9, fontBold: "bold", fill: "#000" }} axisLine={false} tickLine={false} />
+                            <XAxis dataKey="name" tick={{ fontSize: 9, fontWeight: "bold", fill: "#000" }} axisLine={false} tickLine={false} />
                             <YAxis hide />
-                            <RechartsTooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ fontSize: '10px', fontBold: "bold", border: 'none', backgroundColor: '#000', color: '#fff' }} />
+                            <RechartsTooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ fontSize: '10px', fontWeight: "bold", border: 'none', backgroundColor: '#000', color: '#fff' }} />
                             <Bar dataKey="value" radius={[0, 0, 0, 0]}>
                               {stats.statusData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#000' : '#e2e8f0'} />
@@ -472,13 +487,13 @@ export function ReportDialog() {
                   )}
 
                   {includeLog && (
-                    <div className="space-y-8 pt-12 border-t border-slate-100">
+                    <div className="space-y-8 pt-4 lg:pt-12 border-t border-slate-100">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-bold uppercase tracking-widest text-slate-950">Detailed Operational Audit Log</h3>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{reportTasks.length} Tracked Units</span>
                       </div>
-                      <div className="border border-slate-200 bg-white overflow-x-auto print:overflow-visible">
-                        <table className="w-full text-left text-[9px] border-collapse min-w-[1600px] print:min-w-[1400px]">
+                      <div className="border border-slate-200 bg-white overflow-x-auto scrollbar-default">
+                        <table className="w-full text-left text-[9px] border-collapse min-w-[1600px]">
                           <thead>
                             <tr className="bg-slate-50 border-b font-bold uppercase tracking-wider">
                               <th className="px-4 py-4 border-r w-12 text-center">#</th>

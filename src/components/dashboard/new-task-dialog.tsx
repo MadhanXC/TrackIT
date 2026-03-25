@@ -269,7 +269,11 @@ export function NewTaskDialog() {
                       <User className="h-3 w-3" /> POCs
                     </FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter POC contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} />
+                      <Textarea 
+                        placeholder="Enter POC contact information..." 
+                        className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

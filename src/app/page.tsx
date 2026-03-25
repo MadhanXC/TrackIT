@@ -130,7 +130,7 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
-            {/* Quick Tasks - Order 1 on mobile */}
+            {/* Quick Tasks - Priority Order 1 on Mobile */}
             <div className="col-span-full md:col-span-4 order-1 md:order-2">
               <Card className="border-slate-300 shadow-none rounded-none">
                 <CardHeader className="border-b border-slate-100 pb-3">
@@ -187,7 +187,7 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Recent Entries - Order 2 on mobile */}
+            {/* Recent Entries - Priority Order 2 on Mobile */}
             <div className="col-span-full md:col-span-8 order-2 md:order-1">
               <Card className="border-slate-300 shadow-none rounded-none h-full">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 pb-4">
@@ -234,7 +234,7 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Stat Cards - Order 3 on mobile */}
+            {/* Stat Cards - Priority Order 3 on Mobile */}
             <div className="col-span-full order-3 md:order-none">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard title="Active" value={activeTasksCount.toString()} change="Current" trend="neutral" icon={Zap} />

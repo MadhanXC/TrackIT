@@ -187,8 +187,8 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
       <DialogTrigger asChild>
         {trigger || <Button variant="outline" size="sm" className="rounded-none border-slate-950 font-bold">Modify</Button>}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto border-none shadow-2xl p-0 rounded-none bg-white">
-        <DialogHeader className="p-4 md:p-6 border-b border-slate-200 flex flex-row items-center justify-between sticky top-0 bg-white z-20">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-hidden border-none shadow-2xl p-0 rounded-none bg-white flex flex-col">
+        <DialogHeader className="p-4 md:p-6 border-b border-slate-200 flex flex-row items-center justify-between bg-white z-20 shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-none bg-slate-950 flex items-center justify-center shrink-0">
               <Layout className="h-5 w-5 text-white" />
@@ -197,12 +197,12 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
               <DialogTitle className="text-base md:text-lg font-bold text-slate-950 uppercase tracking-tight">
                 {readOnly ? 'Entry Details' : `Modify ${form.watch('workItemType')}`}
               </DialogTitle>
-              {!readOnly && <DialogDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Entry: {task.id.slice(0, 8)}</DialogDescription>}
+              {!readOnly && <Badge variant="outline" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-none px-0">Entry: {task.id.slice(0, 8)}</Badge>}
             </div>
           </div>
         </DialogHeader>
 
-        <div className="p-4 md:p-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
           {readOnly ? (
             <div className="space-y-12">
               <div className="space-y-2">
@@ -375,7 +375,11 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         <User className="h-3 w-3" /> POCs
                       </FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Enter POC contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} />
+                        <Textarea 
+                          placeholder="Enter POC contact information..." 
+                          className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" 
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -440,7 +444,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <FormItem>
                       <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Detailed Scope</FormLabel>
                       <FormControl>
-                        <Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" {...field} />
+                        <Textarea 
+                          className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" 
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
