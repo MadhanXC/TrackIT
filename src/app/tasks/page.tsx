@@ -80,12 +80,6 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = React.useState('newest');
   const [currentPage, setCurrentPage] = React.useState(1);
 
-  React.useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setViewMode('card');
-    }
-  }, []);
-
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(
@@ -152,7 +146,7 @@ export default function TasksPage() {
   const handleDelete = (taskId: string) => {
     if (!firestore) return;
     deleteDocumentNonBlocking(doc(firestore, 'workItems', taskId));
-    toast({ title: "Removed", description: `Project removed.` });
+    toast({ title: "Removed", description: `Item removed.` });
   };
 
   return (
@@ -162,7 +156,10 @@ export default function TasksPage() {
         <header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 md:px-6 border-b border-slate-100 bg-white sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
-            <h1 className="text-sm md:text-lg font-bold text-slate-950 font-headline uppercase tracking-tight">Workspace</h1>
+            <div className="flex flex-col border-l-4 border-primary pl-3">
+              <h1 className="text-sm md:text-lg font-bold text-slate-950 font-headline uppercase tracking-tight">Workspace</h1>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Active Pipeline Management</span>
+            </div>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <ReportDialog />
@@ -255,7 +252,7 @@ export default function TasksPage() {
 
             <div className="flex items-center justify-between pt-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                {filteredTasks.length} Resulting Records
+                {filteredTasks.length} Resulting Items
               </span>
             </div>
           </div>
@@ -268,17 +265,17 @@ export default function TasksPage() {
               </div>
             ) : !paginatedTasks.length ? (
               <div className="rounded-none border border-dashed border-slate-200 py-16 md:py-32 px-4 text-center bg-slate-50">
-                <h3 className="text-slate-950 font-bold mb-2">No projects in scope</h3>
+                <h3 className="text-slate-950 font-bold mb-2">No items in scope</h3>
                 <p className="text-xs text-slate-500 mb-6 uppercase tracking-widest">Adjust filters or search parameters.</p>
                 <Button variant="outline" size="sm" onClick={handleResetFilters} className="font-bold border-slate-950 rounded-none uppercase text-[10px] tracking-widest px-6 h-10">Reset Filters</Button>
               </div>
             ) : viewMode === 'list' ? (
               <div className="rounded-none border border-slate-200 overflow-x-auto bg-white scrollbar-hide">
-                <Table className="min-w-[1400px]">
-                  <TableHeader className="bg-slate-50 border-b border-slate-200">
+                <Table className="min-w-full md:min-w-[1400px]">
+                  <TableHeader className="bg-slate-50 border-b border-slate-200 hidden md:table-header-group">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="font-bold text-slate-950 py-5 pl-8 w-12 text-center text-[10px] tracking-widest">#</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 w-1/4 text-[10px] tracking-widest">ADDRESS - TITLE</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase w-1/4 text-[10px] tracking-widest">Address - Title</TableHead>
                       <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest">Task Details</TableHead>
                       <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest text-center">Status</TableHead>
                       <TableHead className="font-bold text-slate-950 py-5 text-right pr-8 uppercase text-[10px] tracking-widest">Manage</TableHead>
@@ -288,9 +285,9 @@ export default function TasksPage() {
                     {paginatedTasks.map((task, index) => {
                       const sequentialNumber = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
                       return (
-                        <TableRow key={task.id} className="hover:bg-slate-50/50 border-slate-100 group transition-all">
-                          <TableCell className="py-6 pl-8 font-bold text-slate-400 text-[10px] text-center">{sequentialNumber}</TableCell>
-                          <TableCell className="py-6 align-top">
+                        <TableRow key={task.id} className="hover:bg-slate-50/50 border-slate-100 group transition-all flex flex-col md:table-row p-4 md:p-0">
+                          <TableCell className="py-6 pl-8 font-bold text-slate-400 text-[10px] text-center hidden md:table-cell">{sequentialNumber}</TableCell>
+                          <TableCell className="py-2 md:py-6 align-top">
                             <div className="flex flex-col gap-1.5">
                               <span className="font-bold text-slate-950 text-sm md:text-base leading-tight tracking-tight">
                                 {task.siteAddressStreet} - {task.title}
@@ -307,7 +304,7 @@ export default function TasksPage() {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="py-6 align-top">
+                          <TableCell className="py-2 md:py-6 align-top">
                             <div className="flex flex-wrap gap-2 max-w-md">
                               {task.permitRequired && (
                                 <div className="flex flex-col gap-0.5">
@@ -332,25 +329,25 @@ export default function TasksPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="py-6 align-top">
-                            <div className="flex flex-col gap-1 items-center">
+                          <TableCell className="py-2 md:py-6 align-top">
+                            <div className="flex flex-row md:flex-col gap-1 items-center justify-between md:justify-center">
                               <Badge className={cn("text-[10px] font-bold rounded-none h-6 uppercase px-3", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950 border-none")}>
                                 {task.overallWorkStatus}
                               </Badge>
-                              <div className="flex flex-col gap-0.5 mt-1 text-center">
+                              <div className="flex flex-col gap-0.5 mt-1 text-right md:text-center">
                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Created: {task.createdAt ? format(new Date(task.createdAt), "MM/dd/yy") : '—'}</span>
                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated ? `Started: ${task.dateInitiated}` : ''}</span>
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="py-6 text-right pr-8 align-top">
+                          <TableCell className="py-4 md:py-6 text-right pr-0 md:pr-8 align-top">
                             <div className="flex justify-end gap-1 md:opacity-20 md:group-hover:opacity-100 transition-opacity">
                               <EditTaskDialog task={task} readOnly={true} trigger={<Button variant="ghost" size="icon" className="h-9 w-9 text-slate-950 hover:bg-slate-100 rounded-none"><Eye className="h-4 w-4" /></Button>} />
                               <EditTaskDialog task={task} trigger={<Button variant="ghost" size="icon" className="h-9 w-9 text-slate-950 hover:bg-slate-100 rounded-none"><Pencil className="h-4 w-4" /></Button>} />
                               <AlertDialog>
                                 <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/5 rounded-none"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
                                 <AlertDialogContent className="rounded-none border-slate-200">
-                                  <AlertDialogHeader><AlertDialogTitle className="font-bold text-slate-950">Remove Project?</AlertDialogTitle></AlertDialogHeader>
+                                  <AlertDialogHeader><AlertDialogTitle className="font-bold text-slate-950">Remove Entry?</AlertDialogTitle></AlertDialogHeader>
                                   <AlertDialogFooter>
                                     <AlertDialogCancel className="font-bold rounded-none border-slate-200">Cancel</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => handleDelete(task.id)} className="bg-destructive text-white font-bold rounded-none">Confirm</AlertDialogAction>

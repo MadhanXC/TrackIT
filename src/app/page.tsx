@@ -110,7 +110,10 @@ export default function Dashboard() {
         <header className="flex h-16 shrink-0 items-center justify-between gap-2 px-4 md:px-6 border-b border-slate-200 bg-white sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <SidebarTrigger />
-            <h1 className="text-sm md:text-lg font-bold text-slate-950 font-headline uppercase tracking-tight">Dashboard</h1>
+            <div className="flex flex-col border-l-4 border-primary pl-3">
+              <h1 className="text-sm md:text-lg font-bold text-slate-950 font-headline uppercase tracking-tight">Dashboard</h1>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Operational Overview</span>
+            </div>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <ReportDialog />
@@ -122,7 +125,7 @@ export default function Dashboard() {
           <div className="mb-8 md:mb-10">
             {mounted ? (
               <>
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-950 tracking-tighter">Hi {firstName}</h2>
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-950 tracking-tighter uppercase">Hi {firstName}</h2>
                 <p className="text-slate-500 font-bold text-[10px] tracking-widest uppercase">{activeTasksCount} active items</p>
               </>
             ) : (
@@ -131,16 +134,16 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
-            {/* Stat Cards - Top on Desktop (md:order-first), Bottom on Mobile (order-3) */}
+            {/* Stat Cards - Top on Desktop, Bottom on Mobile */}
             <div className="col-span-full order-3 md:order-first">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2 md:mb-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard title="Active" value={activeTasksCount.toString()} change="Current Items" trend="neutral" icon={Zap} />
                 <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime Items" trend="neutral" icon={Clock3} />
                 <StatCard title="Completed" value={completedTasksCount.toString()} change="Closed Items" trend="up" icon={BarChart3} />
               </div>
             </div>
 
-            {/* Quick Tasks - Order 1 on Mobile */}
+            {/* Quick Tasks */}
             <div className="col-span-full md:col-span-4 order-1 md:order-none">
               <Card className="border-slate-300 shadow-none rounded-none">
                 <CardHeader className="border-b border-slate-100 pb-3">
@@ -158,7 +161,7 @@ export default function Dashboard() {
                       <Plus className="h-4 w-4" />
                     </Button>
                   </form>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 scrollbar-hide">
                     {todosLoading ? (
                       <div className="py-8 flex justify-center">
                         <Loader2 className="h-4 w-4 animate-spin text-slate-200" />
@@ -197,7 +200,7 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Recent Entries - Order 2 on Mobile */}
+            {/* Recent Entries */}
             <div className="col-span-full md:col-span-8 order-2 md:order-none">
               <Card className="border-slate-300 shadow-none rounded-none h-full">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 pb-4">

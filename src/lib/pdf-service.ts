@@ -28,12 +28,16 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
   const margin = 50;
   const headerHeight = 150;
   const rowHeight = 60;
-  const summaryBoxHeight = 150;
+  const summaryBoxHeight = 180;
   const bottomPadding = 60;
 
-  // Dynamic Height Calculation
-  const contentHeight = headerHeight + (tasks.length * rowHeight) + (config.summaryStats ? summaryBoxHeight : 0);
-  const pageHeight = Math.max(800, contentHeight + margin + bottomPadding); 
+  // Dynamic Height Calculation: Header + Table Rows + Summary
+  const tableRowsHeight = tasks.length * rowHeight;
+  const summaryHeight = config.summaryStats ? summaryBoxHeight + 80 : 0;
+  const totalContentHeight = headerHeight + tableRowsHeight + summaryHeight + margin + bottomPadding;
+  
+  // PDF height is calculated dynamically based on content
+  const pageHeight = Math.max(800, totalContentHeight); 
 
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -53,7 +57,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
   
   // Date of Report Generation
   page.drawText(`Report Generated: ${format(new Date(), "PPP p")}`, {
-    x: pageWidth - margin - 300,
+    x: pageWidth - margin - 350,
     y: currentY,
     size: 10,
     font: font,
@@ -63,7 +67,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
   currentY -= 35;
 
   const dateRangeStr = config.timeFrame === 'all' ? 'Full History' : `${config.fromDate} to ${config.toDate || format(new Date(), 'yyyy-MM-dd')}`;
-  page.drawText(`Basis: ${config.basis === 'createdAt' ? 'Date Created' : 'Date Initiated'} | Period: ${dateRangeStr} | Scale: Professional A2`, {
+  page.drawText(`Basis: ${config.basis === 'createdAt' ? 'Date Created' : 'Date Initiated'} | Period: ${dateRangeStr}`, {
     x: margin,
     y: currentY,
     size: 11,
@@ -72,15 +76,15 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
   });
   currentY -= 65;
 
-  // Column System
-  const headers = ['#', 'Ref Address - Title', 'Category', 'State', 'Priority', 'Source'];
+  // Weighted Column System - Address gets 10 weights to prevent collision
+  const headers = ['#', 'Ref Address - Title', 'Type', 'State', 'Priority', 'Source'];
   const weights = [1, 10, 3, 3, 3, 3]; 
 
-  if (config.includePOC) { headers.push('Site POCs'); weights.push(6); }
-  if (config.includeSurvey) { headers.push('Survey Phase'); weights.push(5); }
-  if (config.includePermit) { headers.push('Permit Status'); weights.push(5); }
-  if (config.includeMaterials) { headers.push('Material Inv.'); weights.push(6); }
-  if (config.includeShipping) { headers.push('Shipment Status'); weights.push(4); }
+  if (config.includePOC) { headers.push('Site POC'); weights.push(6); }
+  if (config.includeSurvey) { headers.push('Survey'); weights.push(5); }
+  if (config.includePermit) { headers.push('Permit'); weights.push(5); }
+  if (config.includeMaterials) { headers.push('Inventory'); weights.push(6); }
+  if (config.includeShipping) { headers.push('Shipments'); weights.push(4); }
 
   headers.push('Created', 'Initiated', 'Completed');
   weights.push(3, 3, 3);
@@ -88,7 +92,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
   const totalWeight = weights.reduce((a, b) => a + b, 0);
   const usableWidth = pageWidth - margin * 2;
   const unitWidth = usableWidth / totalWeight;
-  const gutter = 20; 
+  const gutter = 15; 
 
   const getColX = (index: number) => {
     let x = margin;
@@ -109,9 +113,9 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
 
   headers.forEach((header, i) => {
     page.drawText(header.toUpperCase(), {
-      x: getColX(i) + 10,
+      x: getColX(i) + 5,
       y: currentY + 4,
-      size: 10,
+      size: 9,
       font: fontBold,
       color: rgb(1, 1, 1),
     });
@@ -119,7 +123,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
   currentY -= 50;
 
   // Draw Data Rows
-  const fontSize = 9;
+  const fontSize = 8.5;
   for (let idx = 0; idx < tasks.length; idx++) {
     const t = tasks[idx];
     const rowData = [
@@ -162,7 +166,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
         }
 
         page.drawText(displayLine, {
-          x: getColX(i) + 10,
+          x: getColX(i) + 5,
           y: currentY - lineIdx * 12,
           size: fontSize,
           font: (lineIdx === 0 && (i === 1)) ? fontBold : font,
@@ -181,10 +185,10 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
     currentY -= rowHeight;
   }
 
-  // Operational Audit Summary Below Table
+  // OPERATIONAL SUMMARY at Bottom
   if (config.summaryStats) {
     currentY -= 40;
-    page.drawText('OPERATIONAL AUDIT SUMMARY', {
+    page.drawText('SUMMARY', {
       x: margin,
       y: currentY,
       size: 16,
@@ -199,7 +203,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
       { label: 'COMPLETION RATE', value: `${s.successRate}%` },
       { label: 'PENDING ITEMS', value: s.active.toString() },
       { 
-        label: 'SURVEY BREAKDOWN', 
+        label: 'SURVEY PHASE', 
         value: `${s.surveys.total} Total Items`, 
         sub: `Pending: ${s.surveys.pending} / Completed: ${s.surveys.completed}` 
       },

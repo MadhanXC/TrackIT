@@ -24,7 +24,7 @@ export default function Error({
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-none bg-destructive/10">
             <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
-          <CardTitle className="text-2xl font-headline font-bold uppercase tracking-tight">Something went wrong</CardTitle>
+          <CardTitle className="text-2xl font-headline font-bold uppercase tracking-tight">System Error</CardTitle>
           <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Operational workspace failure detected
           </CardDescription>
