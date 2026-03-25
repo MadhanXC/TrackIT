@@ -1,3 +1,4 @@
+
 'use client';
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
@@ -158,7 +159,7 @@ export default function TasksPage() {
             <SidebarTrigger />
             <div className="flex flex-col border-l-4 border-primary pl-3">
               <h1 className="text-sm md:text-lg font-bold text-slate-950 font-headline uppercase tracking-tight">Workspace</h1>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Active Pipeline Management</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Active Pipeline Management</span>
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
@@ -183,7 +184,7 @@ export default function TasksPage() {
                 <Button 
                   variant="outline" 
                   onClick={handleResetFilters} 
-                  className="h-12 rounded-none border-slate-200 text-[10px] font-bold uppercase tracking-widest px-4 hover:bg-slate-50"
+                  className="h-12 rounded-none border-slate-200 text-[11px] font-bold uppercase tracking-widest px-4 hover:bg-slate-50"
                 >
                   <RotateCcw className="h-3.5 w-3.5 mr-2" /> Reset
                 </Button>
@@ -196,7 +197,7 @@ export default function TasksPage() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-10 border-slate-200 font-bold text-slate-950 rounded-none uppercase text-[9px] tracking-widest">
+                <SelectTrigger className="h-10 border-slate-200 font-bold text-slate-950 rounded-none uppercase text-[10px] tracking-widest">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
@@ -206,7 +207,7 @@ export default function TasksPage() {
               </Select>
 
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="h-10 border-slate-200 font-bold text-slate-950 rounded-none uppercase text-[9px] tracking-widest">
+                <SelectTrigger className="h-10 border-slate-200 font-bold text-slate-950 rounded-none uppercase text-[10px] tracking-widest">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
@@ -217,7 +218,7 @@ export default function TasksPage() {
               </Select>
 
               <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="h-10 border-slate-200 font-bold text-slate-950 rounded-none uppercase text-[9px] tracking-widest">
+                <SelectTrigger className="h-10 border-slate-200 font-bold text-slate-950 rounded-none uppercase text-[10px] tracking-widest">
                   <SelectValue placeholder="Priority" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
@@ -227,7 +228,7 @@ export default function TasksPage() {
               </Select>
 
               <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                <SelectTrigger className="h-10 border-slate-200 font-bold text-slate-950 rounded-none uppercase text-[9px] tracking-widest">
+                <SelectTrigger className="h-10 border-slate-200 font-bold text-slate-950 rounded-none uppercase text-[10px] tracking-widest">
                   <SelectValue placeholder="Source" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
@@ -237,7 +238,7 @@ export default function TasksPage() {
               </Select>
 
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-10 border-primary/20 bg-slate-50 font-bold text-primary rounded-none uppercase text-[9px] tracking-widest">
+                <SelectTrigger className="h-10 border-primary/20 bg-slate-50 font-bold text-primary rounded-none uppercase text-[10px] tracking-widest">
                   <SelectValue placeholder="Sort By" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
@@ -251,7 +252,7 @@ export default function TasksPage() {
             </div>
 
             <div className="flex items-center justify-between pt-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                 {filteredTasks.length} Resulting Items
               </span>
             </div>
@@ -261,24 +262,24 @@ export default function TasksPage() {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-32 gap-4">
                 <Loader2 className="h-10 w-10 animate-spin text-slate-200" />
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Syncing Workspace...</p>
+                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">Syncing Workspace...</p>
               </div>
             ) : !paginatedTasks.length ? (
               <div className="rounded-none border border-dashed border-slate-200 py-16 md:py-32 px-4 text-center bg-slate-50">
                 <h3 className="text-slate-950 font-bold mb-2">No items in scope</h3>
-                <p className="text-xs text-slate-500 mb-6 uppercase tracking-widest">Adjust filters or search parameters.</p>
-                <Button variant="outline" size="sm" onClick={handleResetFilters} className="font-bold border-slate-950 rounded-none uppercase text-[10px] tracking-widest px-6 h-10">Reset Filters</Button>
+                <p className="text-[11px] text-slate-500 mb-6 uppercase tracking-widest">Adjust filters or search parameters.</p>
+                <Button variant="outline" size="sm" onClick={handleResetFilters} className="font-bold border-slate-950 rounded-none uppercase text-[11px] tracking-widest px-6 h-10">Reset Filters</Button>
               </div>
             ) : viewMode === 'list' ? (
               <div className="rounded-none border border-slate-200 overflow-x-auto bg-white scrollbar-hide">
                 <Table className="min-w-full md:min-w-[1400px]">
                   <TableHeader className="bg-slate-50 border-b border-slate-200 hidden md:table-header-group">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="font-bold text-slate-950 py-5 pl-8 w-12 text-center text-[10px] tracking-widest">#</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase w-1/4 text-[10px] tracking-widest">Address - Title</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest">Task Details</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest text-center">Status</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 text-right pr-8 uppercase text-[10px] tracking-widest">Manage</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 pl-8 w-12 text-center text-[11px] tracking-widest">#</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 w-1/4 text-[11px] tracking-widest">Address - Title</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[11px] tracking-widest">Task Details</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[11px] tracking-widest text-center">Status</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 text-right pr-8 uppercase text-[11px] tracking-widest">Manage</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -286,21 +287,21 @@ export default function TasksPage() {
                       const sequentialNumber = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
                       return (
                         <TableRow key={task.id} className="hover:bg-slate-50/50 border-slate-100 group transition-all flex flex-col md:table-row p-4 md:p-0">
-                          <TableCell className="py-6 pl-8 font-bold text-slate-400 text-[10px] text-center hidden md:table-cell">{sequentialNumber}</TableCell>
+                          <TableCell className="py-6 pl-8 font-bold text-slate-400 text-[11px] text-center hidden md:table-cell">{sequentialNumber}</TableCell>
                           <TableCell className="py-2 md:py-6 align-top">
                             <div className="flex flex-col gap-1.5">
                               <span className="font-bold text-slate-950 text-sm md:text-base leading-tight tracking-tight">
                                 {task.siteAddressStreet} - {task.title}
                               </span>
                               <div className="flex items-center gap-3">
-                                <Badge variant="outline" className="text-[9px] font-bold text-slate-500 border-slate-200 rounded-none uppercase">{task.workItemType}</Badge>
+                                <Badge variant="outline" className="text-[10px] font-bold text-slate-500 border-slate-200 rounded-none uppercase">{task.workItemType}</Badge>
                                 <Badge variant="outline" className={cn(
-                                  "text-[9px] font-bold border-none rounded-none uppercase",
+                                  "text-[10px] font-bold border-none rounded-none uppercase",
                                   task.priority === 'Urgent' ? "bg-red-50 text-red-700" : "text-slate-500 border-slate-200"
                                 )}>
                                   {task.priority}
                                 </Badge>
-                                <Badge variant="outline" className="text-[9px] font-bold text-slate-500 border-slate-200 rounded-none uppercase">Source: {task.source}</Badge>
+                                <Badge variant="outline" className="text-[10px] font-bold text-slate-500 border-slate-200 rounded-none uppercase">Source: {task.source}</Badge>
                               </div>
                             </div>
                           </TableCell>
@@ -308,21 +309,21 @@ export default function TasksPage() {
                             <div className="flex flex-wrap gap-2 max-w-md">
                               {task.permitRequired && (
                                 <div className="flex flex-col gap-0.5">
-                                  <Badge variant="outline" className="text-[9px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase">Permit: {task.permitStatus}</Badge>
-                                  <span className="text-[8px] font-bold text-primary uppercase ml-1">By: {task.permitHandler}</span>
+                                  <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase">Permit: {task.permitStatus}</Badge>
+                                  <span className="text-[9px] font-bold text-primary uppercase ml-1">By: {task.permitHandler}</span>
                                 </div>
                               )}
                               {task.surveyRequired && (
                                 <div className="flex flex-col gap-0.5">
-                                  <Badge variant="outline" className="text-[9px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase">Survey: {task.surveyStatus}</Badge>
-                                  <span className="text-[8px] font-bold text-primary uppercase ml-1">By: {task.surveyHandler}</span>
+                                  <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase">Survey: {task.surveyStatus}</Badge>
+                                  <span className="text-[9px] font-bold text-primary uppercase ml-1">By: {task.surveyHandler}</span>
                                 </div>
                               )}
                               {task.materialsRequired && (
-                                <Badge variant="outline" className="text-[9px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase">Materials: {task.materialsList?.length || 0}</Badge>
+                                <Badge variant="outline" className="text-[10px] font-bold bg-white text-slate-950 border-slate-200 rounded-none h-6 uppercase">Materials: {task.materialsList?.length || 0}</Badge>
                               )}
                               {task.shipmentRequired && (
-                                <Badge variant="outline" className="text-[9px] font-bold bg-slate-950 text-white border-none rounded-none h-6 uppercase px-2 flex items-center gap-1.5">
+                                <Badge variant="outline" className="text-[10px] font-bold bg-slate-950 text-white border-none rounded-none h-6 uppercase px-2 flex items-center gap-1.5">
                                   <Truck className="h-2.5 w-2.5" />
                                   {task.shipmentStatus}
                                 </Badge>
@@ -331,12 +332,12 @@ export default function TasksPage() {
                           </TableCell>
                           <TableCell className="py-2 md:py-6 align-top">
                             <div className="flex flex-row md:flex-col gap-1 items-center justify-between md:justify-center">
-                              <Badge className={cn("text-[10px] font-bold rounded-none h-6 uppercase px-3", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950 border-none")}>
+                              <Badge className={cn("text-[11px] font-bold rounded-none h-6 uppercase px-3", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950 border-none")}>
                                 {task.overallWorkStatus}
                               </Badge>
                               <div className="flex flex-col gap-0.5 mt-1 text-right md:text-center">
-                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Created: {task.createdAt ? format(new Date(task.createdAt), "MM/dd/yy") : '—'}</span>
-                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated ? `Started: ${task.dateInitiated}` : ''}</span>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Created: {task.createdAt ? format(new Date(task.createdAt), "MM/dd/yy") : '—'}</span>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated ? `Started: ${task.dateInitiated}` : ''}</span>
                               </div>
                             </div>
                           </TableCell>
@@ -368,13 +369,13 @@ export default function TasksPage() {
                   const sequentialNumber = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
                   return (
                     <div key={task.id} className="border border-slate-200 rounded-none p-6 bg-white hover:border-primary transition-all group flex flex-col h-full relative">
-                      <div className="absolute top-4 right-4 text-[9px] font-bold text-slate-200">{sequentialNumber}</div>
+                      <div className="absolute top-4 right-4 text-[10px] font-bold text-slate-200">{sequentialNumber}</div>
                       <div className="flex justify-between items-start mb-6">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[9px] font-bold text-slate-400 border-slate-100 rounded-none uppercase tracking-widest">{task.workItemType}</Badge>
+                            <Badge variant="outline" className="text-[10px] font-bold text-slate-400 border-slate-100 rounded-none uppercase tracking-widest">{task.workItemType}</Badge>
                             <Badge className={cn(
-                              "text-[8px] font-bold border-none rounded-none uppercase",
+                              "text-[9px] font-bold border-none rounded-none uppercase",
                               task.priority === 'Urgent' ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-500"
                             )}>
                               {task.priority}
@@ -390,22 +391,22 @@ export default function TasksPage() {
                         <h3 className="text-base md:text-lg font-bold text-slate-950 leading-tight group-hover:text-primary transition-colors tracking-tight">
                           {task.siteAddressStreet}
                         </h3>
-                        <p className="text-xs font-bold text-slate-500">{task.title}</p>
-                        <p className="text-xs font-medium text-slate-400 line-clamp-2 leading-relaxed mt-2">{task.description}</p>
+                        <p className="text-sm font-bold text-slate-500">{task.title}</p>
+                        <p className="text-sm font-medium text-slate-400 line-clamp-2 leading-relaxed mt-2">{task.description}</p>
                       </div>
                       
                       <div className="space-y-4 pt-6 border-t border-slate-50">
                         <div className="grid grid-cols-2 gap-2">
-                          {task.permitRequired && <div className="flex items-center gap-1.5"><ClipboardCheck className="h-3 w-3 text-slate-400" /><span className="text-[9px] font-bold text-slate-950 uppercase">Permit: {task.permitStatus}</span></div>}
-                          {task.surveyRequired && <div className="flex items-center gap-1.5"><FileText className="h-3 w-3 text-slate-400" /><span className="text-[9px] font-bold text-slate-950 uppercase">Survey: {task.surveyStatus}</span></div>}
-                          {task.materialsRequired && <div className="flex items-center gap-1.5"><Package className="h-3 w-3 text-slate-400" /><span className="text-[9px] font-bold text-slate-950 uppercase">Inv: {task.materialsList?.length || 0}</span></div>}
-                          {task.shipmentRequired && <div className="flex items-center gap-1.5"><Truck className="h-3 w-3 text-slate-400" /><span className="text-[9px] font-bold text-slate-950 uppercase">{task.shipmentStatus}</span></div>}
+                          {task.permitRequired && <div className="flex items-center gap-1.5"><ClipboardCheck className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">Permit: {task.permitStatus}</span></div>}
+                          {task.surveyRequired && <div className="flex items-center gap-1.5"><FileText className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">Survey: {task.surveyStatus}</span></div>}
+                          {task.materialsRequired && <div className="flex items-center gap-1.5"><Package className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">Inv: {task.materialsList?.length || 0}</span></div>}
+                          {task.shipmentRequired && <div className="flex items-center gap-1.5"><Truck className="h-3 w-3 text-slate-400" /><span className="text-[10px] font-bold text-slate-950 uppercase">{task.shipmentStatus}</span></div>}
                         </div>
                         <div className="flex items-center justify-between mt-4">
-                          <Badge className={cn("text-[9px] font-bold rounded-none border-none px-3 uppercase tracking-widest", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950")}>
+                          <Badge className={cn("text-[10px] font-bold rounded-none border-none px-3 uppercase tracking-widest", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950")}>
                             {task.overallWorkStatus}
                           </Badge>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated || 'Not Commenced'}</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated || 'Not Commenced'}</span>
                         </div>
                       </div>
                     </div>
@@ -422,11 +423,11 @@ export default function TasksPage() {
                 size="sm" 
                 disabled={currentPage === 1} 
                 onClick={() => { setCurrentPage(prev => Math.max(1, prev - 1)); window.scrollTo({ top: 0 }); }} 
-                className="w-full md:w-auto font-bold rounded-none border-slate-200 h-10 px-6 uppercase text-[10px] tracking-widest"
+                className="w-full md:w-auto font-bold rounded-none border-slate-200 h-10 px-6 uppercase text-[11px] tracking-widest"
               >
                 <ChevronLeft className="h-4 w-4 mr-2" /> Previous
               </Button>
-              <span className="text-[10px] font-bold text-slate-950 uppercase tracking-widest min-w-[120px] text-center">
+              <span className="text-[11px] font-bold text-slate-950 uppercase tracking-widest min-w-[120px] text-center">
                 Page {currentPage} of {totalPages}
               </span>
               <Button 
@@ -434,7 +435,7 @@ export default function TasksPage() {
                 size="sm" 
                 disabled={currentPage === totalPages} 
                 onClick={() => { setCurrentPage(prev => Math.min(totalPages, prev + 1)); window.scrollTo({ top: 0 }); }} 
-                className="w-full md:w-auto font-bold rounded-none border-slate-200 h-10 px-6 uppercase text-[10px] tracking-widest"
+                className="w-full md:w-auto font-bold rounded-none border-slate-200 h-10 px-6 uppercase text-[11px] tracking-widest"
               >
                 Next <ChevronRight className="h-4 w-4 ml-2" />
               </Button>

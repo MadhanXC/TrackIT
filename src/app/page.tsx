@@ -1,3 +1,4 @@
+
 "use client"
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
@@ -112,7 +113,7 @@ export default function Dashboard() {
             <SidebarTrigger />
             <div className="flex flex-col border-l-4 border-primary pl-3">
               <h1 className="text-sm md:text-lg font-bold text-slate-950 font-headline uppercase tracking-tight">Dashboard</h1>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Operational Overview</span>
+              <span className="text-[12px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Operational Overview</span>
             </div>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
@@ -126,7 +127,7 @@ export default function Dashboard() {
             {mounted ? (
               <>
                 <h2 className="text-2xl md:text-3xl font-bold text-slate-950 tracking-tighter uppercase">Hi {firstName}</h2>
-                <p className="text-slate-500 font-bold text-[10px] tracking-widest uppercase">{activeTasksCount} active items</p>
+                <p className="text-slate-500 font-bold text-[13px] tracking-widest uppercase">{activeTasksCount} active items</p>
               </>
             ) : (
               <div className="h-10 w-48 bg-slate-50 animate-pulse" />
@@ -145,15 +146,15 @@ export default function Dashboard() {
 
             {/* Quick Tasks */}
             <div className="col-span-full md:col-span-4 order-1 md:order-none">
-              <Card className="border-slate-300 shadow-none rounded-none">
+              <Card className="border-slate-300 shadow-none rounded-none bg-white">
                 <CardHeader className="border-b border-slate-100 pb-3">
-                  <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Quick Tasks</CardTitle>
+                  <CardTitle className="text-[13px] font-bold uppercase tracking-widest text-slate-950">Quick Tasks</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4 px-4 pb-4">
                   <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
                     <input 
                       placeholder="Add personal todo..." 
-                      className="flex h-9 w-full bg-background px-3 py-2 text-[10px] rounded-none border border-slate-200 font-bold uppercase tracking-tight focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400"
+                      className="flex h-9 w-full bg-background px-3 py-2 text-[12px] rounded-none border border-slate-200 font-bold uppercase tracking-tight focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400"
                       value={todoTitle}
                       onChange={(e) => setTodoTitle(e.target.value)}
                     />
@@ -167,7 +168,7 @@ export default function Dashboard() {
                         <Loader2 className="h-4 w-4 animate-spin text-slate-200" />
                       </div>
                     ) : !todos || todos.length === 0 ? (
-                      <p className="text-[9px] font-bold text-slate-400 uppercase text-center py-4">No quick tasks</p>
+                      <p className="text-[12px] font-bold text-slate-400 uppercase text-center py-4">No quick tasks</p>
                     ) : (
                       todos.map((todo) => (
                         <div key={todo.id} className="group flex items-center justify-between p-2 bg-slate-50 border border-slate-100">
@@ -178,7 +179,7 @@ export default function Dashboard() {
                               className="rounded-none border-slate-300 data-[state=checked]:bg-slate-950 data-[state=checked]:border-slate-950" 
                             />
                             <span className={cn(
-                              "text-[10px] font-bold uppercase tracking-tight truncate", 
+                              "text-[13px] font-bold uppercase tracking-tight truncate", 
                               todo.completed ? "text-slate-300 line-through" : "text-slate-900"
                             )}>
                               {todo.title}
@@ -202,11 +203,11 @@ export default function Dashboard() {
 
             {/* Recent Entries */}
             <div className="col-span-full md:col-span-8 order-2 md:order-none">
-              <Card className="border-slate-300 shadow-none rounded-none h-full">
+              <Card className="border-slate-300 shadow-none rounded-none h-full bg-white">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 pb-4">
-                  <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Recent Entries</CardTitle>
+                  <CardTitle className="text-[13px] font-bold uppercase tracking-widest text-slate-950">Recent Entries</CardTitle>
                   <Link href="/tasks">
-                    <Button variant="ghost" size="sm" className="text-[9px] font-bold uppercase tracking-widest text-primary">Full View</Button>
+                    <Button variant="ghost" size="sm" className="text-[12px] font-bold uppercase tracking-widest text-primary">Full View</Button>
                   </Link>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -214,22 +215,22 @@ export default function Dashboard() {
                     {tasksLoading ? (
                       <div className="flex flex-col items-center justify-center py-16 gap-3">
                         <Loader2 className="h-6 w-6 animate-spin text-slate-200" />
-                        <p className="text-[9px] text-slate-400 font-bold uppercase">Syncing Pipeline...</p>
+                        <p className="text-[12px] text-slate-400 font-bold uppercase">Syncing Pipeline...</p>
                       </div>
                     ) : !sortedTasks || sortedTasks.length === 0 ? (
-                      <div className="text-center py-16 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                      <div className="text-center py-16 text-slate-400 text-[13px] font-bold uppercase tracking-widest">
                         <p>No records found.</p>
                       </div>
                     ) : (
                       sortedTasks.slice(0, 10).map((task) => (
                         <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-slate-50 transition-colors gap-3">
                           <div className="flex flex-col gap-0.5">
-                            <h4 className="text-[11px] font-bold text-slate-950 leading-tight tracking-tight">{task.siteAddressStreet}</h4>
-                            <span className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">{task.title}</span>
+                            <h4 className="text-[14px] font-bold text-slate-950 leading-tight tracking-tight">{task.siteAddressStreet}</h4>
+                            <span className="text-[12px] font-bold text-slate-400 tracking-widest uppercase">{task.title}</span>
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-4">
                             <Badge className={cn(
-                              "text-[8px] font-bold border-none rounded-none uppercase", 
+                              "text-[11px] font-bold border-none rounded-none uppercase", 
                               task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950"
                             )}>
                               {task.overallWorkStatus}

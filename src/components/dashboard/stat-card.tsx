@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,11 +22,11 @@ export function StatCard({ title, value, change, icon: Icon, trend, className }:
           <div className="p-2 rounded-none bg-accent group-hover:bg-primary/10 transition-colors">
             <Icon className="h-4 w-4 text-primary" />
           </div>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
             {change}
           </span>
         </div>
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</h3>
+        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</h3>
         <p className="text-2xl font-bold text-slate-950">{value}</p>
       </CardContent>
     </Card>

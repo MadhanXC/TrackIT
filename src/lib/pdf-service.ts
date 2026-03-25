@@ -1,3 +1,4 @@
+
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { format } from 'date-fns';
 
@@ -36,7 +37,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
   const summaryHeight = config.summaryStats ? summaryBoxHeight + 80 : 0;
   const totalContentHeight = headerHeight + tableRowsHeight + summaryHeight + margin + bottomPadding;
   
-  // PDF height is calculated dynamically based on content to close just below summary
+  // PDF height is calculated dynamically based on content
   const pageHeight = Math.max(800, totalContentHeight); 
 
   const pdfDoc = await PDFDocument.create();
@@ -55,7 +56,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
     color: rgb(0, 0, 0),
   });
   
-  // Date of Report Generation for audit traceability
+  // Date of Report Generation
   page.drawText(`Report Generated: ${format(new Date(), "PPP p")}`, {
     x: pageWidth - margin - 350,
     y: currentY,
@@ -76,7 +77,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
   });
   currentY -= 65;
 
-  // Weighted Column System - Address gets 10 weights to prevent collision
+  // Weighted Column System
   const headers = ['#', 'Ref Address - Title', 'Type', 'State', 'Priority', 'Source'];
   const weights = [1, 10, 3, 3, 3, 3]; 
 
@@ -185,7 +186,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
     currentY -= rowHeight;
   }
 
-  // OPERATIONAL AUDIT SUMMARY - Positioned definitively below the table
+  // OPERATIONAL SUMMARY
   if (config.summaryStats) {
     currentY -= 40;
     page.drawText('SUMMARY', {
