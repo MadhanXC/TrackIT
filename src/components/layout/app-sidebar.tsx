@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -19,6 +18,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar
 } from "@/components/ui/sidebar"
 import { usePathname } from "next/navigation"
 import { useAuth, useUser } from "@/firebase"
@@ -34,6 +34,13 @@ export function AppSidebar() {
   const pathname = usePathname()
   const auth = useAuth()
   const { user } = useUser()
+  const { setOpenMobile, isMobile } = useSidebar()
+
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
 
   return (
     <Sidebar variant="inset" className="border-r border-slate-100 bg-white">
@@ -52,7 +59,13 @@ export function AppSidebar() {
           <SidebarMenu>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.label}>
-                <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label} className="h-11 rounded-none px-4">
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={pathname === item.href} 
+                  tooltip={item.label} 
+                  className="h-11 rounded-none px-4"
+                  onClick={handleNavClick}
+                >
                   <Link href={item.href}>
                     <item.icon className={pathname === item.href ? "text-primary" : "text-slate-400"} />
                     <span className="font-bold text-slate-900 uppercase tracking-tight text-xs">{item.label}</span>
@@ -82,7 +95,6 @@ export function AppSidebar() {
               </div>
             </div>
           </div>
-          
           <Button 
             variant="ghost" 
             size="sm" 
@@ -92,7 +104,6 @@ export function AppSidebar() {
             <LogOut className="h-4 w-4 mr-3 group-hover:text-destructive transition-colors" />
             Sign Out
           </Button>
-          
           <div className="px-2 pt-2 border-t border-slate-50">
             <span className="text-[8px] font-bold text-slate-200 uppercase tracking-widest">Workspace v1.0</span>
           </div>

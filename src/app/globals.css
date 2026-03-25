@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -51,8 +50,8 @@
 
 @media print {
   @page { 
-    size: auto; 
-    margin: 15mm;
+    size: landscape; 
+    margin: 5mm;
   }
   
   body > *:not(#print-root) {
@@ -68,6 +67,7 @@
     padding: 0 !important;
     background: white !important;
     visibility: visible !important;
+    overflow: visible !important;
   }
 
   #print-root * {
@@ -75,6 +75,46 @@
     background: transparent !important;
     visibility: visible !important;
     box-shadow: none !important;
+    border-color: #e2e8f0 !important;
+    overflow: visible !important;
+    /* Hide scrollbars during print */
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  #print-root *::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Force full expansion of containers for print */
+  #print-root .overflow-x-auto,
+  #print-root .overflow-y-auto,
+  #print-root .scrollbar-hide {
+    overflow: visible !important;
+    max-height: none !important;
+    max-width: none !important;
+    display: block !important;
+  }
+
+  #print-root table {
+    width: 100% !important;
+    min-width: 1400px !important; /* Ensure wide coverage for all columns */
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    border: 1px solid #e2e8f0 !important;
+    page-break-inside: auto !important;
+  }
+
+  #print-root tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  #print-root th, #print-root td {
+    border: 1px solid #e2e8f0 !important;
+    padding: 8px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
   }
 
   .print-hidden {

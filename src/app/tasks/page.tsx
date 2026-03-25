@@ -1,10 +1,9 @@
-
 'use client';
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase"
-import { collection, query, orderBy, doc, where } from "firebase/firestore"
+import { collection, query, doc, where } from "firebase/firestore"
 import { Badge } from "@/components/ui/badge"
 import { 
   Search, 
@@ -45,6 +44,7 @@ import { ReportDialog } from "@/components/dashboard/report-dialog"
 import { cn } from "@/lib/utils"
 import { deleteDocumentNonBlocking } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
+import { format } from "date-fns"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,14 +80,17 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = React.useState('newest');
   const [currentPage, setCurrentPage] = React.useState(1);
 
-  // Work Items Query - Isolated by userId
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setViewMode('card');
+    }
+  }, []);
+
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(
       collection(firestore, 'workItems'), 
-      where('userId', '==', user.uid),
-      // Temporarily removed to confirm index issue
-      // orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
   }, [firestore, isUserLoading, user]);
 
@@ -259,18 +262,25 @@ export default function TasksPage() {
 
           <div className="mb-12 md:mb-16">
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-32 gap-4"><Loader2 className="h-10 w-10 animate-spin text-slate-200" /><p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Syncing Workspace...</p></div>
+              <div className="flex flex-col items-center justify-center py-32 gap-4">
+                <Loader2 className="h-10 w-10 animate-spin text-slate-200" />
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Syncing Workspace...</p>
+              </div>
             ) : !paginatedTasks.length ? (
-              <div className="rounded-none border border-dashed border-slate-200 py-16 md:py-32 px-4 text-center bg-slate-50"><h3 className="text-slate-950 font-bold mb-2">No projects in scope</h3><p className="text-xs text-slate-500 mb-6 uppercase tracking-widest">Adjust filters or search parameters.</p><Button variant="outline" size="sm" onClick={handleResetFilters} className="font-bold border-slate-950 rounded-none uppercase text-[10px] tracking-widest px-6 h-10">Reset Filters</Button></div>
+              <div className="rounded-none border border-dashed border-slate-200 py-16 md:py-32 px-4 text-center bg-slate-50">
+                <h3 className="text-slate-950 font-bold mb-2">No projects in scope</h3>
+                <p className="text-xs text-slate-500 mb-6 uppercase tracking-widest">Adjust filters or search parameters.</p>
+                <Button variant="outline" size="sm" onClick={handleResetFilters} className="font-bold border-slate-950 rounded-none uppercase text-[10px] tracking-widest px-6 h-10">Reset Filters</Button>
+              </div>
             ) : viewMode === 'list' ? (
-              <div className="rounded-none border border-slate-200 overflow-x-auto bg-white">
-                <Table className="min-w-[800px]">
+              <div className="rounded-none border border-slate-200 overflow-x-auto bg-white scrollbar-hide">
+                <Table className="min-w-[1400px]">
                   <TableHeader className="bg-slate-50 border-b border-slate-200">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="font-bold text-slate-950 py-5 pl-8 w-12 text-center text-[10px] tracking-widest">#</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 w-1/3 text-[10px] tracking-widest">Address - Title</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest">Requirements</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest text-center">Status</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 w-1/4 text-[10px] tracking-widest">Address - Title</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest">Operational Intelligence</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest text-center">Lifecycle</TableHead>
                       <TableHead className="font-bold text-slate-950 py-5 text-right pr-8 uppercase text-[10px] tracking-widest">Manage</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -327,7 +337,10 @@ export default function TasksPage() {
                               <Badge className={cn("text-[10px] font-bold rounded-none h-6 uppercase px-3", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950 border-none")}>
                                 {task.overallWorkStatus}
                               </Badge>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter text-center">{task.dateInitiated ? `Started: ${task.dateInitiated}` : ''}</span>
+                              <div className="flex flex-col gap-0.5 mt-1 text-center">
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Created: {task.createdAt ? format(new Date(task.createdAt), "MM/dd/yy") : '—'}</span>
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated ? `Started: ${task.dateInitiated}` : ''}</span>
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell className="py-6 text-right pr-8 align-top">
@@ -336,7 +349,13 @@ export default function TasksPage() {
                               <EditTaskDialog task={task} trigger={<Button variant="ghost" size="icon" className="h-9 w-9 text-slate-950 hover:bg-slate-100 rounded-none"><Pencil className="h-4 w-4" /></Button>} />
                               <AlertDialog>
                                 <AlertDialogTrigger asChild><Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/5 rounded-none"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                                <AlertDialogContent className="rounded-none border-slate-200"><AlertDialogHeader><AlertDialogTitle className="font-bold text-slate-950">Remove Project?</AlertDialogTitle></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel className="font-bold rounded-none border-slate-200">Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(task.id)} className="bg-destructive text-white font-bold rounded-none">Confirm</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+                                <AlertDialogContent className="rounded-none border-slate-200">
+                                  <AlertDialogHeader><AlertDialogTitle className="font-bold text-slate-950">Remove Project?</AlertDialogTitle></AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="font-bold rounded-none border-slate-200">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(task.id)} className="bg-destructive text-white font-bold rounded-none">Confirm</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
                               </AlertDialog>
                             </div>
                           </TableCell>
@@ -386,7 +405,9 @@ export default function TasksPage() {
                           {task.shipmentRequired && <div className="flex items-center gap-1.5"><Truck className="h-3 w-3 text-slate-400" /><span className="text-[9px] font-bold text-slate-950 uppercase">{task.shipmentStatus}</span></div>}
                         </div>
                         <div className="flex items-center justify-between mt-4">
-                          <Badge className={cn("text-[9px] font-bold rounded-none border-none px-3 uppercase tracking-widest", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950")}>{task.overallWorkStatus}</Badge>
+                          <Badge className={cn("text-[9px] font-bold rounded-none border-none px-3 uppercase tracking-widest", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950")}>
+                            {task.overallWorkStatus}
+                          </Badge>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.dateInitiated || 'Not Commenced'}</span>
                         </div>
                       </div>

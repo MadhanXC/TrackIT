@@ -1,4 +1,3 @@
-
 "use client"
 
 import { AppSidebar } from "@/components/layout/app-sidebar"
@@ -37,7 +36,6 @@ export default function Dashboard() {
     setMounted(true);
   }, []);
 
-  // Work Items Query - Strictly isolated by userId
   const recentTasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(
@@ -49,7 +47,6 @@ export default function Dashboard() {
 
   const { data: rawTasks, isLoading: tasksLoading } = useCollection(recentTasksQuery);
 
-  // Todo List Query - Strictly isolated
   const todosQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(collection(firestore, 'users', user.uid, 'todos'), orderBy('createdAt', 'desc'));
@@ -85,7 +82,6 @@ export default function Dashboard() {
   const handleAddTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (!todoTitle.trim() || !firestore || !user) return;
-    
     addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'todos'), {
       title: todoTitle.trim(),
       completed: false,
@@ -122,12 +118,10 @@ export default function Dashboard() {
         </header>
 
         <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full flex flex-col">
-          <div className="mb-8 md:mb-10 order-none">
+          <div className="mb-8 md:mb-10">
             {mounted ? (
               <>
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-950 tracking-tighter">
-                  Hi {firstName}
-                </h2>
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-950 tracking-tighter">Hi {firstName}</h2>
                 <p className="text-slate-500 font-bold text-[10px] tracking-widest uppercase">{activeTasksCount} active items</p>
               </>
             ) : (
@@ -136,16 +130,64 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
-            {/* Stat Cards - Order 3 on mobile (bottom), Order none on desktop (top) */}
-            <div className="col-span-full order-3 md:order-none mb-2 md:mb-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatCard title="Active" value={activeTasksCount.toString()} change="Current" trend="neutral" icon={Zap} />
-                <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime" trend="neutral" icon={Clock3} />
-                <StatCard title="Completed" value={completedTasksCount.toString()} change="Closed" trend="up" icon={BarChart3} />
-              </div>
+            {/* Quick Tasks - Order 1 on mobile */}
+            <div className="col-span-full md:col-span-4 order-1 md:order-2">
+              <Card className="border-slate-300 shadow-none rounded-none">
+                <CardHeader className="border-b border-slate-100 pb-3">
+                  <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Quick Tasks</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4 px-4 pb-4">
+                  <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
+                    <input 
+                      placeholder="Add personal todo..." 
+                      className="flex h-9 w-full bg-background px-3 py-2 text-[10px] rounded-none border border-slate-200 font-bold uppercase tracking-tight focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400"
+                      value={todoTitle}
+                      onChange={(e) => setTodoTitle(e.target.value)}
+                    />
+                    <Button type="submit" size="icon" className="h-9 w-9 bg-slate-950 rounded-none shrink-0">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </form>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                    {todosLoading ? (
+                      <div className="py-8 flex justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin text-slate-200" />
+                      </div>
+                    ) : !todos || todos.length === 0 ? (
+                      <p className="text-[9px] font-bold text-slate-400 uppercase text-center py-4">No quick tasks</p>
+                    ) : (
+                      todos.map((todo) => (
+                        <div key={todo.id} className="group flex items-center justify-between p-2 bg-slate-50 border border-slate-100">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Checkbox 
+                              checked={todo.completed} 
+                              onCheckedChange={() => handleToggleTodo(todo)} 
+                              className="rounded-none border-slate-300 data-[state=checked]:bg-slate-950 data-[state=checked]:border-slate-950" 
+                            />
+                            <span className={cn(
+                              "text-[10px] font-bold uppercase tracking-tight truncate", 
+                              todo.completed ? "text-slate-300 line-through" : "text-slate-900"
+                            )}>
+                              {todo.title}
+                            </span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-slate-300 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
+                            onClick={() => handleDeleteTodo(todo.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Recent Entries - Order 2 on mobile, Order 1 on desktop */}
+            {/* Recent Entries - Order 2 on mobile */}
             <div className="col-span-full md:col-span-8 order-2 md:order-1">
               <Card className="border-slate-300 shadow-none rounded-none h-full">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 pb-4">
@@ -167,13 +209,18 @@ export default function Dashboard() {
                       </div>
                     ) : (
                       sortedTasks.slice(0, 10).map((task) => (
-                        <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-slate-50 transition-colors gap-3 sm:gap-0">
+                        <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-slate-50 transition-colors gap-3">
                           <div className="flex flex-col gap-0.5">
                             <h4 className="text-[11px] font-bold text-slate-950 leading-tight tracking-tight">{task.siteAddressStreet}</h4>
                             <span className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">{task.title}</span>
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-4">
-                            <Badge className={cn("text-[8px] font-bold border-none rounded-none uppercase", task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950 border-none")}>{task.overallWorkStatus}</Badge>
+                            <Badge className={cn(
+                              "text-[8px] font-bold border-none rounded-none uppercase", 
+                              task.overallWorkStatus === 'Completed' ? "bg-slate-950 text-white" : "bg-slate-200 text-slate-950"
+                            )}>
+                              {task.overallWorkStatus}
+                            </Badge>
                             <div className="flex gap-1">
                               <EditTaskDialog task={task} readOnly={true} trigger={<Button variant="ghost" size="icon" className="h-7 w-7"><Eye className="h-3.5 w-3.5" /></Button>} />
                               <EditTaskDialog task={task} trigger={<Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="h-3.5 w-3.5" /></Button>} />
@@ -187,59 +234,13 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Quick Tasks - Order 1 on mobile (top), Order 2 on desktop */}
-            <div className="col-span-full md:col-span-4 order-1 md:order-2">
-              <Card className="border-slate-300 shadow-none rounded-none">
-                <CardHeader className="border-b border-slate-100 pb-3">
-                  <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Quick Tasks</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 px-4 pb-4">
-                  <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
-                    <input 
-                      placeholder="Add personal todo..." 
-                      className="flex h-9 w-full bg-background px-3 py-2 text-[10px] rounded-none border border-slate-200 font-bold uppercase tracking-tight focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400"
-                      value={todoTitle}
-                      onChange={(e) => setTodoTitle(e.target.value)}
-                    />
-                    <Button type="submit" size="icon" className="h-9 w-9 bg-slate-950 rounded-none shrink-0">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </form>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-                    {todosLoading ? (
-                      <div className="py-8 flex justify-center"><Loader2 className="h-4 w-4 animate-spin text-slate-200" /></div>
-                    ) : !todos || todos.length === 0 ? (
-                      <p className="text-[9px] font-bold text-slate-400 uppercase text-center py-4">No quick tasks</p>
-                    ) : (
-                      todos.map((todo) => (
-                        <div key={todo.id} className="group flex items-center justify-between p-2 bg-slate-50 border border-slate-100">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <Checkbox 
-                              checked={todo.completed} 
-                              onCheckedChange={() => handleToggleTodo(todo)}
-                              className="rounded-none border-slate-300 data-[state=checked]:bg-slate-950 data-[state=checked]:border-slate-950" 
-                            />
-                            <span className={cn(
-                              "text-[10px] font-bold uppercase tracking-tight truncate",
-                              todo.completed ? "text-slate-300 line-through" : "text-slate-900"
-                            )}>
-                              {todo.title}
-                            </span>
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 text-slate-300 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleDeleteTodo(todo.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Stat Cards - Order 3 on mobile */}
+            <div className="col-span-full order-3 md:order-none">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <StatCard title="Active" value={activeTasksCount.toString()} change="Current" trend="neutral" icon={Zap} />
+                <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime" trend="neutral" icon={Clock3} />
+                <StatCard title="Completed" value={completedTasksCount.toString()} change="Closed" trend="up" icon={BarChart3} />
+              </div>
             </div>
           </div>
         </main>

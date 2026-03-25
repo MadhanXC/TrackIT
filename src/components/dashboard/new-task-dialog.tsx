@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -36,9 +35,9 @@ import {
   Plus, 
   Loader2,
   Search,
-  X,
   PlusCircle,
-  User
+  User,
+  X
 } from 'lucide-react';
 import { useFirestore, setDocumentNonBlocking, useUser } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
@@ -123,12 +122,8 @@ export function NewTaskDialog() {
 
   const street1Value = form.watch('street1');
   const surveyRequired = form.watch('surveyRequired');
-  const surveyHandledBy = form.watch('surveyHandledBy');
   const permitRequired = form.watch('permitRequired');
-  const permitHandledBy = form.watch('permitHandledBy');
   const materialsRequired = form.watch('materialsRequired');
-  const shipmentRequired = form.watch('shipmentRequired');
-  const confirmationStatus = form.watch('confirmationStatus');
 
   React.useEffect(() => {
     const fetchAddresses = async () => {
@@ -190,16 +185,18 @@ export function NewTaskDialog() {
           <Plus className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">New Project/Job</span><span className="sm:hidden">New</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto border-none shadow-2xl p-0 rounded-none bg-white">
-        <DialogHeader className="p-4 md:p-6 border-b border-slate-200 flex flex-row items-center gap-3 sticky top-0 bg-white z-20">
-          <div className="h-10 w-10 rounded-none bg-slate-950 flex items-center justify-center shrink-0"><PlusCircle className="h-5 w-5 text-white" /></div>
+      <DialogContent className="max-w-4xl w-[95vw] h-[90vh] overflow-hidden border-none shadow-2xl p-0 rounded-none bg-white flex flex-col">
+        <DialogHeader className="p-4 md:p-6 border-b border-slate-200 flex flex-row items-center gap-3 bg-white z-20 shrink-0">
+          <div className="h-10 w-10 rounded-none bg-slate-950 flex items-center justify-center shrink-0">
+            <PlusCircle className="h-5 w-5 text-white" />
+          </div>
           <div className="flex flex-col text-left">
             <DialogTitle className="text-base md:text-lg font-bold text-slate-950 uppercase tracking-tight">Create Entry</DialogTitle>
             <DialogDescription className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Define parameters and site details</DialogDescription>
           </div>
         </DialogHeader>
 
-        <div className="p-4 md:p-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
@@ -209,10 +206,7 @@ export function NewTaskDialog() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Work Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
                             <SelectValue />
@@ -232,19 +226,14 @@ export function NewTaskDialog() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Priority</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-none">
-                          {['Low', 'Medium', 'High', 'Urgent'].map(p => (
-                            <SelectItem key={p} value={p}>{p}</SelectItem>
-                          ))}
+                          {['Low', 'Medium', 'High', 'Urgent'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -256,19 +245,14 @@ export function NewTaskDialog() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Source</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-none">
-                          {['Call', 'Email', 'Text', 'In-person'].map(s => (
-                            <SelectItem key={s} value={s}>{s}</SelectItem>
-                          ))}
+                          {['Call', 'Email', 'Text', 'In-person'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -276,64 +260,87 @@ export function NewTaskDialog() {
                 />
               </div>
 
-              <FormField control={form.control} name="pocName" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2">
-                    <User className="h-3 w-3" /> POCs
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Enter POC contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <FormField 
+                control={form.control} 
+                name="pocName" 
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2">
+                      <User className="h-3 w-3" /> POCs
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter POC contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} 
+              />
 
-              <FormField control={form.control} name="title" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Internal Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Reference description..." className="border-slate-300 font-bold h-11 rounded-none" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <FormField 
+                control={form.control} 
+                name="title" 
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Internal Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Reference description..." className="border-slate-300 font-bold h-11 rounded-none" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} 
+              />
               
               <div className="space-y-2 relative">
                 <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Site Address</FormLabel>
-                <FormField control={form.control} name="street1" render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                        <Input placeholder="Search location..." className="pl-10 border-slate-300 font-bold h-11 rounded-none" {...field} autoComplete="off" onFocus={() => setIsInputFocused(true)} onBlur={() => setTimeout(() => setIsInputFocused(false), 200)} />
-                      </div>
-                    </FormControl>
-                    {showDropdown && searchResults.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 z-50 bg-white border border-slate-200 shadow-xl max-h-48 overflow-y-auto">
-                        {searchResults.map((r, i) => (
-                          <div 
-                            key={i} 
-                            className="px-4 py-2.5 text-[10px] hover:bg-slate-50 cursor-pointer font-bold border-b border-slate-100" 
-                            onMouseDown={() => handleSelectAddress(r)}
-                          >
-                            {r.properties.formatted}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </FormItem>
-                )} />
+                <FormField 
+                  control={form.control} 
+                  name="street1" 
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                          <Input 
+                            placeholder="Search location..." 
+                            className="pl-10 border-slate-300 font-bold h-11 rounded-none" 
+                            {...field} 
+                            autoComplete="off" 
+                            onFocus={() => setIsInputFocused(true)} 
+                            onBlur={() => setTimeout(() => setIsInputFocused(false), 200)} 
+                          />
+                        </div>
+                      </FormControl>
+                      {showDropdown && searchResults.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-50 bg-white border border-slate-200 shadow-xl max-h-48 overflow-y-auto">
+                          {searchResults.map((r, i) => (
+                            <div 
+                              key={i} 
+                              className="px-4 py-2.5 text-[10px] hover:bg-slate-50 cursor-pointer font-bold border-b border-slate-100" 
+                              onMouseDown={() => handleSelectAddress(r)}
+                            >
+                              {r.properties.formatted}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </FormItem>
+                  )} 
+                />
               </div>
 
-              <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Detailed Scope</FormLabel>
-                  <FormControl>
-                    <Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <FormField 
+                control={form.control} 
+                name="description" 
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Detailed Scope</FormLabel>
+                    <FormControl>
+                      <Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} 
+              />
 
               <div className="space-y-6 pt-6 border-t border-slate-100">
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Operational Requirements</p>
@@ -391,9 +398,9 @@ export function NewTaskDialog() {
                 {surveyRequired && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-1">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="surveyHandledBy"
+                      <FormField 
+                        control={form.control} 
+                        name="surveyHandledBy" 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[9px] font-bold uppercase text-slate-500">Handled By</FormLabel>
@@ -409,11 +416,11 @@ export function NewTaskDialog() {
                               </SelectContent>
                             </Select>
                           </FormItem>
-                        )}
+                        )} 
                       />
-                      <FormField
-                        control={form.control}
-                        name="surveyStatus"
+                      <FormField 
+                        control={form.control} 
+                        name="surveyStatus" 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[9px] font-bold uppercase text-slate-500">Survey Status</FormLabel>
@@ -424,13 +431,11 @@ export function NewTaskDialog() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent className="rounded-none">
-                                {SURVEY_STATUS_OPTIONS.map(s => (
-                                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                                ))}
+                                {SURVEY_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </FormItem>
-                        )}
+                        )} 
                       />
                     </div>
                   </div>
@@ -439,9 +444,9 @@ export function NewTaskDialog() {
                 {permitRequired && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-1">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="permitHandledBy"
+                      <FormField 
+                        control={form.control} 
+                        name="permitHandledBy" 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[9px] font-bold uppercase text-slate-500">Handled By</FormLabel>
@@ -457,69 +462,96 @@ export function NewTaskDialog() {
                               </SelectContent>
                             </Select>
                           </FormItem>
-                        )}
+                        )} 
                       />
-                      <FormField
-                        control={form.control}
-                        name="permitStatus"
+                      <FormField 
+                        control={form.control} 
+                        name="permitStatus" 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[9px] font-bold uppercase text-slate-500">Permit Status</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                            >
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent className="rounded-none">
-                                {PERMIT_STATUS_OPTIONS.map((s) => (
-                                  <SelectItem key={s} value={s}>
-                                    {s}
-                                  </SelectItem>
-                                ))}
+                                {PERMIT_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </FormItem>
-                        )}
+                        )} 
                       />
                     </div>
+                  </div>
+                )}
+
+                {materialsRequired && (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[9px] font-bold uppercase">Materials</p>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => appendMaterial({ name: '', quantity: '' })} className="h-6 text-[9px] uppercase font-bold text-primary">
+                        <Plus className="h-3 w-3 mr-1" /> Add
+                      </Button>
+                    </div>
+                    {materialFields.map((item, index) => (
+                      <div key={item.id} className="flex gap-2">
+                        <Input className="h-9 text-[10px] font-bold border-slate-300 rounded-none flex-1" placeholder="Item" {...form.register(`materialsList.${index}.name`)} />
+                        <Input className="h-9 text-[10px] font-bold border-slate-300 rounded-none w-20" placeholder="Qty" {...form.register(`materialsList.${index}.quantity`)} />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeMaterial(index)} className="h-9 w-9 text-destructive">
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
-                <FormField control={form.control} name="confirmationStatus" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Confirmation</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="rounded-none">
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Confirmed">Confirmed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="overallWorkStatus" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Lifecycle Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="rounded-none">
-                        {['Pending', 'In Progress', 'Completed', 'On Hold'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
+                <FormField 
+                  control={form.control} 
+                  name="confirmationStatus" 
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Confirmation</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-none">
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Confirmed">Confirmed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} 
+                />
+                <FormField 
+                  control={form.control} 
+                  name="overallWorkStatus" 
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Lifecycle Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-none">
+                          {['Pending', 'In Progress', 'Completed', 'On Hold'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} 
+                />
               </div>
-              <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-xs tracking-widest" disabled={isSubmitting}>{isSubmitting ? <Loader2 className="animate-spin mr-2" /> : 'Create Entry'}</Button>
+              <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-xs tracking-widest" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : 'Create Entry'}
+              </Button>
             </form>
           </Form>
         </div>
