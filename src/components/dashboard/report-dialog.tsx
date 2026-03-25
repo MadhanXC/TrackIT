@@ -43,7 +43,7 @@ import {
   endOfYear
 } from "date-fns";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, orderBy, where } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 import { 
   Bar, 
   BarChart, 
@@ -67,6 +67,7 @@ export function ReportDialog() {
   React.useEffect(() => { setMounted(true); }, []);
   
   // Configuration State
+  const [basis, setBasis] = React.useState<"createdAt" | "dateInitiated">("createdAt");
   const [timeFrame, setTimeFrame] = React.useState("all");
   const [fromDate, setFromDate] = React.useState<string>("");
   const [toDate, setDateTo] = React.useState<string>("");
@@ -87,7 +88,7 @@ export function ReportDialog() {
 
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
 
-  // Work Items Query - Isolated by userId
+  // Work Items Query
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(
@@ -126,7 +127,7 @@ export function ReportDialog() {
       if (priorityFilter !== "all" && task.priority !== priorityFilter) return false;
       if (sourceFilter !== "all" && task.source !== sourceFilter) return false;
       
-      const taskDateStr = task.dateInitiated || task.createdAt;
+      const taskDateStr = task[basis];
       if (fromDate && taskDateStr) {
         const taskDate = new Date(taskDateStr);
         const start = startOfDay(new Date(fromDate));
@@ -143,7 +144,7 @@ export function ReportDialog() {
       if (!isACompleted && isBCompleted) return -1;
       return 0;
     });
-  }, [rawTasks, typeFilter, statusFilter, priorityFilter, sourceFilter, fromDate, toDate]);
+  }, [rawTasks, typeFilter, statusFilter, priorityFilter, sourceFilter, fromDate, toDate, basis]);
 
   const reportTasks = React.useMemo(() => {
     if (selectedIds.size === 0) return filteredTasks;
@@ -174,15 +175,14 @@ export function ReportDialog() {
     const printRoot = document.getElementById('print-root');
     const contentNode = reportRef.current;
     if (printRoot && contentNode) {
-      printRoot.innerHTML = contentNode.innerHTML;
-      const onAfterPrint = () => {
-        printRoot.innerHTML = '';
-        window.removeEventListener('afterprint', onAfterPrint);
-      };
-      window.addEventListener('afterprint', onAfterPrint);
+      printRoot.innerHTML = '';
+      const clone = contentNode.cloneNode(true) as HTMLElement;
+      printRoot.appendChild(clone);
+      
       setTimeout(() => {
         window.print();
-      }, 300);
+        printRoot.innerHTML = '';
+      }, 500);
     }
   };
 
@@ -251,6 +251,7 @@ export function ReportDialog() {
   };
 
   const handleReset = () => {
+    setBasis("createdAt");
     setTimeFrame("all");
     setTypeFilter("all");
     setStatusFilter("all");
@@ -275,40 +276,50 @@ export function ReportDialog() {
           <FileText className="h-4 w-4 mr-2" /> Report
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-[1600px] w-[98vw] max-h-[95vh] overflow-y-auto rounded-none border-none p-0 bg-white">
-        <DialogHeader className="p-6 border-b border-slate-200 sticky top-0 bg-white z-50 flex flex-row items-center justify-between print:hidden">
-          <div className="flex items-center gap-3">
+      <DialogContent className="max-w-[1600px] w-[98vw] h-[95vh] rounded-none border-none p-0 bg-white sm:w-[95vw] overflow-hidden flex flex-col">
+        <DialogHeader className="p-4 sm:p-6 border-b border-slate-200 sticky top-0 bg-white z-50 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden shrink-0">
+          <div className="flex items-center gap-3 self-start sm:self-auto">
             <div className="h-10 w-10 bg-slate-950 flex items-center justify-center shrink-0">
               <FileText className="h-5 w-5 text-white" />
             </div>
-            <DialogTitle className="text-xl font-bold uppercase tracking-tight">Report Generator</DialogTitle>
+            <DialogTitle className="text-base sm:text-xl font-bold uppercase tracking-tight">Report Generator</DialogTitle>
           </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <Button variant="ghost" size="sm" onClick={handleReset} className="font-bold rounded-none h-10 px-4 uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-950">
+          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+            <Button variant="ghost" size="sm" onClick={handleReset} className="font-bold rounded-none h-10 px-3 sm:px-4 uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-950 shrink-0">
               <RotateCcw className="h-4 w-4 mr-2" /> Reset
             </Button>
-            <div className="h-10 w-px bg-slate-200 mx-2 hidden md:block" />
-            <Button variant="outline" size="sm" onClick={handleExportExcel} className="font-bold rounded-none h-10 px-6 uppercase text-[10px] tracking-widest border-slate-950 text-slate-950 hover:bg-slate-50">
-              <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel Export
+            <Button variant="outline" size="sm" onClick={handleExportExcel} className="font-bold rounded-none h-10 px-3 sm:px-6 uppercase text-[10px] tracking-widest border-slate-950 text-slate-950 hover:bg-slate-50 shrink-0">
+              <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel
             </Button>
-            <Button variant="default" size="sm" onClick={handlePrint} className="font-bold rounded-none h-10 px-6 uppercase text-[10px] tracking-widest bg-slate-950 text-white shadow-none">
-              <Printer className="h-4 w-4 mr-2" /> PDF Export
+            <Button variant="default" size="sm" onClick={handlePrint} className="font-bold rounded-none h-10 px-3 sm:px-6 uppercase text-[10px] tracking-widest bg-slate-950 text-white shadow-none shrink-0">
+              <Printer className="h-4 w-4 mr-2" /> PDF
             </Button>
           </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
-          <div className="lg:col-span-4 border-r border-slate-100 p-8 space-y-10 print:hidden bg-slate-50/50">
-            <div className="space-y-6">
+        <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
+          {/* Configuration Sidebar */}
+          <div className="w-full lg:w-[400px] border-b lg:border-b-0 lg:border-r border-slate-100 p-4 sm:p-6 space-y-6 print:hidden bg-slate-50/50 overflow-y-auto lg:h-full scrollbar-hide shrink-0">
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-primary" />
                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Intelligent Filters</h3>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
-                  <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Timeline</Label>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="col-span-2 space-y-1.5">
+                  <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Date Basis</Label>
+                  <Select value={basis} onValueChange={(v: any) => setBasis(v)}>
+                    <SelectTrigger className="h-9 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-none">
+                      <SelectItem value="createdAt">Date Created</SelectItem>
+                      <SelectItem value="dateInitiated">Date Initiated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2 space-y-1.5">
+                  <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Timeframe</Label>
                   <Select value={timeFrame} onValueChange={setTimeFrame}>
-                    <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-none">
                       <SelectItem value="all">Full Workspace History</SelectItem>
                       {['daily', 'weekly', 'monthly', 'yearly'].map(t => <SelectItem key={t} value={t} className="uppercase">{t}</SelectItem>)}
@@ -316,18 +327,18 @@ export function ReportDialog() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">From</Label>
-                  <Input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setTimeFrame("custom"); }} className="h-10 rounded-none border-slate-200 font-bold text-[10px] bg-white" />
+                  <Input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setTimeFrame("custom"); }} className="h-9 rounded-none border-slate-200 font-bold text-[10px] bg-white" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">To</Label>
-                  <Input type="date" value={toDate} onChange={(e) => { setDateTo(e.target.value); setTimeFrame("custom"); }} className="h-10 rounded-none border-slate-200 font-bold text-[10px] bg-white" />
+                  <Input type="date" value={toDate} onChange={(e) => { setDateTo(e.target.value); setTimeFrame("custom"); }} className="h-9 rounded-none border-slate-200 font-bold text-[10px] bg-white" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Category</Label>
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-none">
                       <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="Job">Jobs Only</SelectItem>
@@ -335,10 +346,10 @@ export function ReportDialog() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">State</Label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-9 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-none">
                       <SelectItem value="all">All States</SelectItem>
                       {['Pending', 'In Progress', 'On Hold', 'Completed'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -348,81 +359,80 @@ export function ReportDialog() {
               </div>
             </div>
 
-            <div className="space-y-6 pt-8 border-t border-slate-200">
+            <div className="space-y-4 pt-6 border-t border-slate-200">
               <div className="flex items-center gap-2">
                 <Settings2 className="h-4 w-4 text-primary" />
                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Composition</h3>
               </div>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
                 <div className="flex items-center space-x-3 bg-white p-3 border border-slate-100">
                   <Checkbox id="stats-t" checked={includeStats} onCheckedChange={(v) => setIncludeStats(!!v)} className="rounded-none" />
-                  <Label htmlFor="stats-t" className="text-[10px] font-bold uppercase cursor-pointer">Summary Intelligence</Label>
+                  <Label htmlFor="stats-t" className="text-[10px] font-bold uppercase cursor-pointer">Intelligence</Label>
                 </div>
                 <div className="flex items-center space-x-3 bg-white p-3 border border-slate-100">
                   <Checkbox id="charts-t" checked={includeCharts} onCheckedChange={(v) => setIncludeCharts(!!v)} className="rounded-none" />
-                  <Label htmlFor="charts-t" className="text-[10px] font-bold uppercase cursor-pointer">Visual Distribution</Label>
+                  <Label htmlFor="charts-t" className="text-[10px] font-bold uppercase cursor-pointer">Distribution</Label>
                 </div>
-                <div className="flex items-center space-x-3 bg-white p-3 border border-slate-100">
+                <div className="flex items-center space-x-3 bg-white p-3 border border-slate-100 sm:col-span-2 lg:col-span-1">
                   <Checkbox id="log-t" checked={includeLog} onCheckedChange={(v) => setIncludeLog(!!v)} className="rounded-none" />
-                  <Label htmlFor="log-t" className="text-[10px] font-bold uppercase cursor-pointer">Operational Audit Log</Label>
+                  <Label htmlFor="log-t" className="text-[10px] font-bold uppercase cursor-pointer">Operational Log</Label>
                 </div>
-                
-                {includeLog && (
-                  <div className="pl-8 space-y-3 pt-2 border-l border-slate-200 ml-2 animate-in slide-in-from-top-1">
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Select Log Columns</p>
-                    <div className="flex items-center space-x-3">
-                      <Checkbox id="col-poc" checked={includePOC} onCheckedChange={(v) => setIncludePOC(!!v)} className="rounded-none h-3 w-3" />
-                      <Label htmlFor="col-poc" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Site POCs</Label>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Checkbox id="col-survey" checked={includeSurvey} onCheckedChange={(v) => setIncludeSurvey(!!v)} className="rounded-none h-3 w-3" />
-                      <Label htmlFor="col-survey" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Survey Phase</Label>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Checkbox id="col-permit" checked={includePermit} onCheckedChange={(v) => setIncludePermit(!!v)} className="rounded-none h-3 w-3" />
-                      <Label htmlFor="col-permit" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Permit Status</Label>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Checkbox id="col-materials" checked={includeMaterials} onCheckedChange={(v) => setIncludeMaterials(!!v)} className="rounded-none h-3 w-3" />
-                      <Label htmlFor="col-materials" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Materials & Items</Label>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Checkbox id="col-shipping" checked={includeShipping} onCheckedChange={(v) => setIncludeShipping(!!v)} className="rounded-none h-3 w-3" />
-                      <Label htmlFor="col-shipping" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Shipping Status</Label>
-                    </div>
-                  </div>
-                )}
               </div>
+              
+              {includeLog && (
+                <div className="pl-4 space-y-2.5 pt-2 border-l border-slate-200 ml-2 animate-in slide-in-from-top-1 grid grid-cols-2 lg:grid-cols-1">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="col-poc" checked={includePOC} onCheckedChange={(v) => setIncludePOC(!!v)} className="rounded-none h-3 w-3" />
+                    <Label htmlFor="col-poc" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Site POCs</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="col-survey" checked={includeSurvey} onCheckedChange={(v) => setIncludeSurvey(!!v)} className="rounded-none h-3 w-3" />
+                    <Label htmlFor="col-survey" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Survey Phase</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="col-permit" checked={includePermit} onCheckedChange={(v) => setIncludePermit(!!v)} className="rounded-none h-3 w-3" />
+                    <Label htmlFor="col-permit" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Permit Status</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="col-materials" checked={includeMaterials} onCheckedChange={(v) => setIncludeMaterials(!!v)} className="rounded-none h-3 w-3" />
+                    <Label htmlFor="col-materials" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Materials</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="col-shipping" checked={includeShipping} onCheckedChange={(v) => setIncludeShipping(!!v)} className="rounded-none h-3 w-3" />
+                    <Label htmlFor="col-shipping" className="text-[9px] font-bold uppercase cursor-pointer text-slate-600">Shipping</Label>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="space-y-6 pt-8 border-t border-slate-200">
+            <div className="space-y-4 pt-6 border-t border-slate-200 pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MousePointerClick className="h-4 w-4 text-primary" />
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Selection Matrix</h3>
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Selection</h3>
                 </div>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">{selectedIds.size || 'All'} Items</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">{selectedIds.size || 'All'} Records</span>
               </div>
-              <div className="border border-slate-200 rounded-none bg-white max-h-[400px] overflow-y-auto">
+              <div className="border border-slate-200 rounded-none bg-white max-h-[250px] overflow-y-auto scrollbar-hide">
                 <table className="w-full text-left text-[9px] border-collapse">
-                  <thead className="bg-slate-50 sticky top-0 border-b border-slate-200">
+                  <thead className="bg-slate-50 sticky top-0 border-b border-slate-200 z-10">
                     <tr className="font-bold text-slate-950 uppercase">
-                      <th className="px-4 py-3 w-10 border border-slate-200">
+                      <th className="px-3 py-2.5 w-8 border border-slate-200">
                         <Checkbox checked={selectedIds.size === filteredTasks.length && filteredTasks.length > 0} onCheckedChange={toggleSelectAll} className="rounded-none" />
                       </th>
-                      <th className="px-4 py-3 border border-slate-200">Address - Title</th>
+                      <th className="px-3 py-2.5 border border-slate-200">Address - Title</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredTasks.map(t => (
                       <tr key={t.id} className={cn("hover:bg-slate-50 cursor-pointer transition-colors", selectedIds.has(t.id) && "bg-primary/5")}>
-                        <td className="px-4 py-3 border border-slate-200">
+                        <td className="px-3 py-2.5 border border-slate-200">
                           <Checkbox checked={selectedIds.has(t.id)} onCheckedChange={() => toggleSelectOne(t.id)} className="rounded-none" />
                         </td>
-                        <td className="px-4 py-3 font-bold border border-slate-200" onClick={() => toggleSelectOne(t.id)}>
+                        <td className="px-3 py-2.5 font-bold border border-slate-200" onClick={() => toggleSelectOne(t.id)}>
                           <div className="flex flex-col">
                             <span>{t.siteAddressStreet}</span>
-                            <span className="text-[8px] text-slate-400 uppercase">{t.title}</span>
+                            <span className="text-[8px] text-slate-400 uppercase leading-none mt-0.5">{t.title}</span>
                           </div>
                         </td>
                       </tr>
@@ -433,7 +443,8 @@ export function ReportDialog() {
             </div>
           </div>
 
-          <div className="lg:col-span-8 p-8 md:p-12 overflow-y-auto bg-white" ref={reportRef}>
+          {/* Report Preview Area */}
+          <div className="flex-1 p-4 sm:p-8 md:p-12 overflow-y-auto bg-white scrollbar-hide" ref={reportRef}>
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-40 gap-4">
                 <Loader2 className="h-8 w-8 animate-spin text-slate-200" />
@@ -444,29 +455,29 @@ export function ReportDialog() {
                 <p className="text-slate-400 uppercase font-bold text-[10px] tracking-widest">No matching records for scope.</p>
               </div>
             ) : (
-              <div className="space-y-16">
-                <div className="flex flex-col gap-2 border-l-4 border-slate-950 pl-6">
-                  <h2 className="text-3xl font-bold text-slate-950 uppercase tracking-tight">Report</h2>
-                  <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <div className="space-y-12 sm:space-y-16">
+                <div className="flex flex-col gap-2 border-l-4 border-slate-950 pl-4 sm:pl-6">
+                  <h2 className="text-xl sm:text-3xl font-bold text-slate-950 uppercase tracking-tight">Report</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span>Basis: {basis === 'createdAt' ? 'Date Created' : 'Date Initiated'}</span>
+                    <span className="hidden sm:inline">•</span>
                     <span>Period: {fromDate ? format(new Date(fromDate), "PPP") : "Historical"} — {toDate ? format(new Date(toDate), "PPP") : (mounted ? format(new Date(), "PPP") : "")}</span>
-                    <span>•</span>
-                    <span>Dataset: {selectedIds.size > 0 ? `${selectedIds.size} Selected` : `Full Filter Result (${reportTasks.length})`}</span>
                   </div>
                 </div>
 
                 {includeStats && stats && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="bg-slate-50 p-8 border border-slate-200 space-y-4">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Work</p>
-                      <p className="text-5xl font-bold text-slate-950">{stats.total}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8">
+                    <div className="bg-slate-50 p-6 sm:p-8 border border-slate-200 space-y-4">
+                      <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Work</p>
+                      <p className="text-3xl sm:text-5xl font-bold text-slate-950">{stats.total}</p>
                     </div>
-                    <div className="bg-slate-50 p-8 border border-slate-200 space-y-4">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Closure Index</p>
-                      <p className="text-5xl font-bold text-slate-950">{stats.successRate}%</p>
+                    <div className="bg-slate-50 p-6 sm:p-8 border border-slate-200 space-y-4">
+                      <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Closure Index</p>
+                      <p className="text-3xl sm:text-5xl font-bold text-slate-950">{stats.successRate}%</p>
                     </div>
-                    <div className="bg-slate-50 p-8 border border-slate-200 space-y-4">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Pipeline</p>
-                      <p className="text-5xl font-bold text-slate-950">{stats.active}</p>
+                    <div className="bg-slate-50 p-6 sm:p-8 border border-slate-200 space-y-4">
+                      <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Pipeline</p>
+                      <p className="text-3xl sm:text-5xl font-bold text-slate-950">{stats.active}</p>
                     </div>
                   </div>
                 )}
@@ -475,12 +486,12 @@ export function ReportDialog() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 print:block">
                     <div className="space-y-6">
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Lifecycle Distribution</h3>
-                      <div className="h-[300px] w-full bg-slate-50 p-6 border border-slate-100">
+                      <div className="h-[250px] sm:h-[300px] w-full bg-slate-50 p-6 border border-slate-100">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={stats.statusData}>
-                            <XAxis dataKey="name" tick={{ fontSize: 9, fontWeight: "bold", fill: "#000" }} axisLine={false} tickLine={false} />
+                            <XAxis dataKey="name" tick={{ fontSize: 8, fontWeight: "bold", fill: "#000" }} axisLine={false} tickLine={false} />
                             <YAxis hide />
-                            <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ fontSize: '10px', fontWeight: 'bold', border: 'none', backgroundColor: '#000', color: '#fff' }} />
+                            <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ fontSize: '9px', fontWeight: 'bold', border: 'none', backgroundColor: '#000', color: '#fff' }} />
                             <Bar dataKey="value" radius={[0, 0, 0, 0]}>
                               {stats.statusData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#000' : '#e2e8f0'} />
@@ -494,12 +505,12 @@ export function ReportDialog() {
                 )}
 
                 {includeLog && (
-                  <div className="space-y-8 pt-12 border-t border-slate-100">
+                  <div className="space-y-8 pt-8 sm:pt-12 border-t border-slate-100">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold uppercase tracking-widest text-slate-950">Detailed Operational Audit Log</h3>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{reportTasks.length} Logged Units</span>
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-slate-950">Operational Audit Log</h3>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{reportTasks.length} Units</span>
                     </div>
-                    <div className="border border-slate-200 bg-white overflow-x-auto">
+                    <div className="border border-slate-200 bg-white overflow-x-auto scrollbar-hide">
                       <table className="w-full text-left border-collapse text-[10px] min-w-[800px]">
                         <thead>
                           <tr className="bg-slate-100 border-b border-slate-200 font-bold uppercase">
@@ -509,8 +520,8 @@ export function ReportDialog() {
                             <th className="px-4 py-4 border border-slate-200">Status</th>
                             {includeSurvey && <th className="px-4 py-4 border border-slate-200">Survey Phase</th>}
                             {includePermit && <th className="px-4 py-4 border border-slate-200">Permit Status</th>}
-                            {includeMaterials && <th className="px-4 py-4 border border-slate-200">Materials & Items</th>}
-                            <th className="px-4 py-4 border border-slate-200">Operational Timeline</th>
+                            {includeMaterials && <th className="px-4 py-4 border border-slate-200">Materials</th>}
+                            <th className="px-4 py-4 border border-slate-200">Timeline</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -523,11 +534,7 @@ export function ReportDialog() {
                                   <span className="text-[8px] text-slate-400 uppercase">{task.title}</span>
                                 </div>
                               </td>
-                              {includePOC && (
-                                <td className="px-4 py-4 border border-slate-200 font-bold">
-                                  {task.pocName || '—'}
-                                </td>
-                              )}
+                              {includePOC && <td className="px-4 py-4 border border-slate-200 font-bold text-[9px]">{task.pocName || '—'}</td>}
                               <td className="px-4 py-4 border border-slate-200 uppercase font-bold">{task.overallWorkStatus}</td>
                               {includeSurvey && (
                                 <td className="px-4 py-4 border border-slate-200">
@@ -551,22 +558,13 @@ export function ReportDialog() {
                               )}
                               {includeMaterials && (
                                 <td className="px-4 py-4 border border-slate-200 uppercase font-bold text-slate-600">
-                                  {task.materialsRequired && task.materialsList?.length > 0 ? (
-                                    <div className="flex flex-col gap-1">
-                                      {task.materialsList.map((m: any, mIdx: number) => (
-                                        <span key={mIdx} className="text-[8px] border-b border-slate-50 last:border-0 pb-0.5">
-                                          {m.name} (x{m.quantity})
-                                        </span>
-                                      ))}
-                                    </div>
-                                  ) : '—'}
+                                  {task.materialsRequired && task.materialsList?.length > 0 ? `${task.materialsList.length} Items` : '—'}
                                 </td>
                               )}
                               <td className="px-4 py-4 border border-slate-200 font-bold text-slate-950">
-                                <div className="flex flex-col gap-1.5 text-[8px]">
+                                <div className="flex flex-col gap-1 text-[8px]">
                                   <span>Created: {task.createdAt ? format(new Date(task.createdAt), "yyyy-MM-dd") : '—'}</span>
                                   <span>Initiated: {task.dateInitiated || '—'}</span>
-                                  <span>Completed: {task.dateCompleted || '—'}</span>
                                 </div>
                               </td>
                             </tr>

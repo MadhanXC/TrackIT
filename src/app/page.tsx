@@ -136,7 +136,8 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
-            <div className="col-span-full order-none mb-2 md:mb-2">
+            {/* Stat Cards - Order 3 on mobile (bottom), Order none on desktop (top) */}
+            <div className="col-span-full order-3 md:order-none mb-2 md:mb-2">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard title="Active" value={activeTasksCount.toString()} change="Current" trend="neutral" icon={Zap} />
                 <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime" trend="neutral" icon={Clock3} />
@@ -144,11 +145,14 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="col-span-full md:col-span-8 order-1">
+            {/* Recent Entries - Order 2 on mobile, Order 1 on desktop */}
+            <div className="col-span-full md:col-span-8 order-2 md:order-1">
               <Card className="border-slate-300 shadow-none rounded-none h-full">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 pb-4">
                   <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Recent Entries</CardTitle>
-                  <Link href="/tasks"><Button variant="ghost" size="sm" className="text-[9px] font-bold uppercase tracking-widest text-primary">Full View</Button></Link>
+                  <Link href="/tasks">
+                    <Button variant="ghost" size="sm" className="text-[9px] font-bold uppercase tracking-widest text-primary">Full View</Button>
+                  </Link>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="divide-y divide-slate-200">
@@ -183,7 +187,8 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            <div className="col-span-full md:col-span-4 order-2">
+            {/* Quick Tasks - Order 1 on mobile (top), Order 2 on desktop */}
+            <div className="col-span-full md:col-span-4 order-1 md:order-2">
               <Card className="border-slate-300 shadow-none rounded-none">
                 <CardHeader className="border-b border-slate-100 pb-3">
                   <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Quick Tasks</CardTitle>

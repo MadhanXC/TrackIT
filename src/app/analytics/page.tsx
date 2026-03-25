@@ -4,26 +4,22 @@
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase"
-import { collection, query, orderBy, where } from "firebase/firestore"
+import { collection, query, where } from "firebase/firestore"
 import { 
   Printer, 
   FileText, 
   TrendingUp, 
-  PieChart as PieIcon,
   Loader2,
   Calendar as CalendarIcon,
   Layers,
   Filter,
   CheckCircle2,
   Settings2,
-  ChevronDown,
-  BarChart3,
   RotateCcw,
-  MousePointerClick,
-  CheckSquare
+  MousePointerClick
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
   Bar, 
   BarChart, 
@@ -42,7 +38,18 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns"
+import { 
+  format, 
+  isWithinInterval, 
+  startOfDay, 
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear
+} from "date-fns"
 import { DateRange } from "react-day-picker"
 import { 
   Select, 
@@ -61,10 +68,13 @@ export default function AnalyticsPage() {
   const [includeTable, setIncludeTable] = React.useState(true);
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   
+  const [basis, setBasis] = React.useState<"createdAt" | "dateInitiated">("createdAt");
+  const [timeFrame, setTimeFrame] = React.useState("all");
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
   });
+  
   const [typeFilter, setTypeFilter] = React.useState("all");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [priorityFilter, setPriorityFilter] = React.useState("all");
@@ -73,7 +83,27 @@ export default function AnalyticsPage() {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => { setMounted(true); }, []);
 
-  // Work Items Query - Isolated by userId
+  // Update date range based on timeframe
+  React.useEffect(() => {
+    if (timeFrame === "custom") return;
+    const now = new Date();
+    let start: Date | undefined;
+    let end: Date | undefined;
+
+    switch (timeFrame) {
+      case 'daily': start = startOfDay(now); end = endOfDay(now); break;
+      case 'weekly': start = startOfWeek(now); end = endOfWeek(now); break;
+      case 'monthly': start = startOfMonth(now); end = endOfMonth(now); break;
+      case 'yearly': start = startOfYear(now); end = endOfYear(now); break;
+      default: setDateRange(undefined); return;
+    }
+
+    if (start && end) {
+      setDateRange({ from: start, to: end });
+    }
+  }, [timeFrame]);
+
+  // Work Items Query
   const tasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(
@@ -93,9 +123,8 @@ export default function AnalyticsPage() {
       if (priorityFilter !== "all" && task.priority !== priorityFilter) return false;
       if (sourceFilter !== "all" && task.source !== sourceFilter) return false;
       
-      if (dateRange?.from) {
-        const taskDateStr = task.dateInitiated || task.createdAt;
-        if (!taskDateStr) return false;
+      const taskDateStr = task[basis];
+      if (dateRange?.from && taskDateStr) {
         const taskDate = new Date(taskDateStr);
         const start = startOfDay(dateRange.from);
         const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
@@ -111,7 +140,7 @@ export default function AnalyticsPage() {
       if (!isACompleted && isBCompleted) return -1;
       return 0;
     });
-  }, [rawTasks, typeFilter, statusFilter, priorityFilter, sourceFilter, dateRange]);
+  }, [rawTasks, typeFilter, statusFilter, priorityFilter, sourceFilter, dateRange, basis]);
 
   const reportTasks = React.useMemo(() => {
     if (selectedIds.size === 0) return filteredTasks;
@@ -162,8 +191,10 @@ export default function AnalyticsPage() {
     const reportContent = document.getElementById('final-report-content');
     if (printRoot && reportContent) {
       printRoot.innerHTML = reportContent.innerHTML;
-      window.print();
-      printRoot.innerHTML = '';
+      setTimeout(() => {
+        window.print();
+        printRoot.innerHTML = '';
+      }, 500);
     }
   };
 
@@ -179,21 +210,16 @@ export default function AnalyticsPage() {
             <h1 className="text-sm md:text-lg font-bold text-slate-950 font-headline uppercase tracking-tight">Report Generator</h1>
           </div>
           <div className="flex items-center gap-3">
-            {selectedIds.size > 0 && (
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest hidden md:inline">
-                {selectedIds.size} Items Selected
-              </span>
-            )}
-            <Button variant="default" size="sm" onClick={handlePrint} className="font-bold rounded-none h-10 px-6 uppercase text-[10px] tracking-widest shadow-none">
-              <Printer className="h-4 w-4 mr-2" /> Export Final Report
+            <Button variant="default" size="sm" onClick={handlePrint} className="font-bold rounded-none h-10 px-4 md:px-6 uppercase text-[10px] tracking-widest shadow-none">
+              <Printer className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Export Final Report</span><span className="sm:hidden">Export</span>
             </Button>
           </div>
         </header>
 
-        <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
-          <div className="mb-12 space-y-8 print:hidden">
-            <div className="flex flex-col gap-8 bg-slate-50 p-6 border border-slate-200">
-              <div className="space-y-6">
+        <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+          <div className="mb-8 space-y-6 print:hidden">
+            <div className="flex flex-col gap-6 bg-slate-50 p-4 md:p-6 border border-slate-200">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Filter className="h-4 w-4 text-primary" />
@@ -203,6 +229,8 @@ export default function AnalyticsPage() {
                     variant="ghost" 
                     size="sm" 
                     onClick={() => {
+                      setBasis("createdAt");
+                      setTimeFrame("all");
                       setTypeFilter("all");
                       setStatusFilter("all");
                       setPriorityFilter("all");
@@ -216,7 +244,37 @@ export default function AnalyticsPage() {
                   </Button>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Date Basis</Label>
+                    <Select value={basis} onValueChange={(v: any) => setBasis(v)}>
+                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-none">
+                        <SelectItem value="createdAt">Date Created</SelectItem>
+                        <SelectItem value="dateInitiated">Date Initiated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Timeframe</Label>
+                    <Select value={timeFrame} onValueChange={setTimeFrame}>
+                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-none">
+                        <SelectItem value="all">Full History</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                        <SelectItem value="custom">Custom Range</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="space-y-2">
                     <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Timeline</Label>
                     <Popover>
@@ -231,7 +289,7 @@ export default function AnalyticsPage() {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 rounded-none border-slate-200 shadow-xl" align="start">
-                        <Calendar mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} />
+                        <Calendar mode="range" selected={dateRange} onSelect={(r) => { setDateRange(r); setTimeFrame("custom"); }} numberOfMonths={2} />
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -249,54 +307,15 @@ export default function AnalyticsPage() {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Lifecycle</Label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-none">
-                        <SelectItem value="all">All States</SelectItem>
-                        {['Pending', 'In Progress', 'On Hold', 'Completed'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Priority</Label>
-                    <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-none">
-                        <SelectItem value="all">All Priorities</SelectItem>
-                        {['Low', 'Medium', 'High', 'Urgent'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Source</Label>
-                    <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-none">
-                        <SelectItem value="all">All Channels</SelectItem>
-                        {['Call', 'Email', 'Text', 'In-person'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
               </div>
 
-              <div className="space-y-6 pt-6 border-t border-slate-200">
+              <div className="space-y-4 pt-4 border-t border-slate-200">
                 <div className="flex items-center gap-2">
                   <Settings2 className="h-4 w-4 text-primary" />
                   <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Report Composition</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="flex items-center space-x-3 bg-white p-3 border border-slate-100">
                     <Checkbox id="sum" checked={includeSummary} onCheckedChange={(v) => setIncludeSummary(!!v)} className="rounded-none" />
                     <Label htmlFor="sum" className="text-[10px] font-bold uppercase cursor-pointer">Summary Intelligence</Label>
@@ -314,14 +333,14 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="mb-16 space-y-6 print:hidden">
+          <div className="mb-12 space-y-4 print:hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <MousePointerClick className="h-5 w-5 text-primary" />
                 <h3 className="text-sm font-bold uppercase tracking-widest text-slate-950">Selection Matrix</h3>
               </div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                {filteredTasks.length} Filtered Records — {selectedIds.size || 'All'} Selected for Report
+                {filteredTasks.length} Records — {selectedIds.size || 'All'} Selected
               </span>
             </div>
             
@@ -390,7 +409,7 @@ export default function AnalyticsPage() {
                   {!filteredTasks.length && !isLoading && (
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-slate-400 font-bold uppercase text-[10px] tracking-widest border border-slate-200">
-                        No operational records matching current filter configuration.
+                        No operational records matching configuration.
                       </td>
                     </tr>
                   )}
@@ -399,73 +418,59 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="h-px bg-slate-200 mb-16 print:hidden" />
-
-          <div id="final-report-content" className="space-y-16">
+          <div id="final-report-content" className="space-y-12">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-32 gap-4 print:hidden">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Compiling Selected Intelligence...</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Compiling Intelligence...</p>
               </div>
             ) : !stats ? (
               <div className="text-center py-32 border border-dashed border-slate-200 bg-slate-50 print:hidden">
-                <p className="text-slate-400 uppercase font-bold text-xs tracking-widest">No matching results for selected parameters.</p>
+                <p className="text-slate-400 uppercase font-bold text-xs tracking-widest">No matching results for scope.</p>
               </div>
             ) : (
-              <div className="space-y-16">
+              <div className="space-y-12">
                 <div className="flex flex-col gap-2 border-l-4 border-primary pl-6">
-                  <h2 className="text-3xl font-bold text-slate-950 uppercase tracking-tight">Report</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold text-slate-950 uppercase tracking-tight">Report</h2>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    <span>Period: {dateRange?.from ? format(dateRange.from, "PPP") : "Full Workspace History"} — {dateRange?.to ? format(dateRange.to, "PPP") : (mounted ? format(new Date(), "PPP") : "")}</span>
+                    <span>Basis: {basis === 'createdAt' ? 'Date Created' : 'Date Initiated'}</span>
                     <span className="hidden sm:inline">•</span>
-                    <span>Dataset: {selectedIds.size > 0 ? `${selectedIds.size} Selected Records` : `Full Result Set (${reportTasks.length})`}</span>
+                    <span>Period: {dateRange?.from ? format(dateRange.from, "PPP") : "Full History"} — {dateRange?.to ? format(dateRange.to, "PPP") : (mounted ? format(new Date(), "PPP") : "")}</span>
                   </div>
                 </div>
 
                 {includeSummary && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                     <Card className="rounded-none border-slate-200 shadow-none bg-slate-50/50">
                       <CardContent className="pt-8">
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Total Work</p>
-                        <p className="text-5xl font-bold text-slate-950">{stats.total}</p>
-                        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
-                          <Layers className="h-3 w-3 text-primary" />
-                          <span className="text-[9px] font-bold text-slate-400 uppercase">Selected Operational Units</span>
-                        </div>
+                        <p className="text-4xl md:text-5xl font-bold text-slate-950">{stats.total}</p>
                       </CardContent>
                     </Card>
                     <Card className="rounded-none border-slate-200 shadow-none bg-slate-50/50">
                       <CardContent className="pt-8">
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Completion Index</p>
-                        <p className="text-5xl font-bold text-slate-950">
+                        <p className="text-4xl md:text-5xl font-bold text-slate-950">
                           {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
                         </p>
-                        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
-                          <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                          <span className="text-[9px] font-bold text-slate-400 uppercase">{stats.completed} Successive Closures</span>
-                        </div>
                       </CardContent>
                     </Card>
                     <Card className="rounded-none border-slate-200 shadow-none bg-slate-50/50">
                       <CardContent className="pt-8">
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Pipeline Engagement</p>
-                        <p className="text-5xl font-bold text-slate-950">{stats.active}</p>
-                        <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
-                          <TrendingUp className="h-3 w-3 text-primary" />
-                          <span className="text-[9px] font-bold text-slate-400 uppercase">Currently Active Streams</span>
-                        </div>
+                        <p className="text-4xl md:text-5xl font-bold text-slate-950">{stats.active}</p>
                       </CardContent>
                     </Card>
                   </div>
                 )}
 
                 {includeCharts && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 print:block">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 print:block">
                     <Card className="rounded-none border-slate-200 shadow-none print:mb-12 print:border-none">
                       <CardHeader className="border-b border-slate-50">
                         <CardTitle className="text-xs font-bold uppercase tracking-widest">Workflow State Distribution</CardTitle>
                       </CardHeader>
-                      <CardContent className="pt-8 h-[350px]">
+                      <CardContent className="pt-8 h-[300px] md:h-[350px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={stats.statusData}>
                             <XAxis 
@@ -493,7 +498,7 @@ export default function AnalyticsPage() {
                       <CardHeader className="border-b border-slate-50">
                         <CardTitle className="text-xs font-bold uppercase tracking-widest">Source Channel Composition</CardTitle>
                       </CardHeader>
-                      <CardContent className="pt-8 h-[350px]">
+                      <CardContent className="pt-8 h-[300px] md:h-[350px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie
@@ -521,24 +526,21 @@ export default function AnalyticsPage() {
                 )}
 
                 {includeTable && (
-                  <div className="pt-12 border-t border-slate-100">
+                  <div className="pt-8 md:pt-12 border-t border-slate-100">
                     <div className="flex items-center justify-between mb-8">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-primary" />
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-950">Detailed Operational Audit Log</h3>
-                      </div>
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-slate-950">Detailed Operational Audit Log</h3>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{reportTasks.length} Logged Units</span>
                     </div>
-                    <div className="border border-slate-200 rounded-none overflow-hidden bg-white">
-                      <table className="w-full text-left text-[10px] border-collapse">
+                    <div className="border border-slate-200 rounded-none overflow-x-auto bg-white">
+                      <table className="w-full text-left text-[10px] border-collapse min-w-[800px]">
                         <thead className="bg-slate-50 border-b border-slate-200">
                           <tr className="font-bold text-slate-950 uppercase tracking-wider">
                             <th className="px-6 py-5 border border-slate-200 w-16 text-center">#</th>
                             <th className="px-6 py-5 border border-slate-200">Address - Title</th>
                             <th className="px-6 py-5 border border-slate-200">Category</th>
-                            <th className="px-6 py-5 border border-slate-200">Lifecycle State</th>
-                            <th className="px-6 py-5 border border-slate-200">Channel</th>
-                            <th className="px-6 py-5 border border-slate-200">Initiation Date</th>
+                            <th className="px-6 py-5 border border-slate-200">State</th>
+                            <th className="px-6 py-5 border border-slate-200">Source</th>
+                            <th className="px-6 py-5 border border-slate-200">Date Basis</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -557,7 +559,7 @@ export default function AnalyticsPage() {
                               </td>
                               <td className="px-6 py-4 border border-slate-200 uppercase font-bold text-slate-500">{task.source}</td>
                               <td className="px-6 py-4 border border-slate-200 text-slate-950 font-bold">
-                                {task.dateInitiated || task.createdAt ? format(new Date(task.dateInitiated || task.createdAt), "yyyy-MM-dd") : 'PENDING'}
+                                {task[basis] ? format(new Date(task[basis]), "yyyy-MM-dd") : 'PENDING'}
                               </td>
                             </tr>
                           ))}
@@ -568,7 +570,7 @@ export default function AnalyticsPage() {
                 )}
                 
                 <div className="hidden print:flex flex-col items-center pt-24 gap-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Generated via TrackIt Operational Intelligence Workspace</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Generated via TrackIt Workspace</p>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-200">{mounted ? format(new Date(), "PPPP p") : ""}</p>
                 </div>
               </div>

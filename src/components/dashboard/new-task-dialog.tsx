@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -202,60 +203,99 @@ export function NewTaskDialog() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                <FormField control={form.control} name="workItemType" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Work Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="rounded-none">
-                        <SelectItem value="Job">Job</SelectItem>
-                        <SelectItem value="Project">Project</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="priority" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="rounded-none">
-                        {['Low', 'Medium', 'High', 'Urgent'].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="source" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Source</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="rounded-none">
-                        {['Call', 'Email', 'Text', 'In-person'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="workItemType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Work Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-none">
+                          <SelectItem value="Job">Job</SelectItem>
+                          <SelectItem value="Project">Project</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Priority</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-none">
+                          {['Low', 'Medium', 'High', 'Urgent'].map(p => (
+                            <SelectItem key={p} value={p}>{p}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="source"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Source</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-none">
+                          {['Call', 'Email', 'Text', 'In-person'].map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField control={form.control} name="pocName" render={({ field }) => (
-                <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2"><User className="h-3 w-3" /> POCs</FormLabel><FormControl><Textarea placeholder="Enter POC contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                  <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2">
+                    <User className="h-3 w-3" /> POCs
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Enter POC contact information..." className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )} />
 
               <FormField control={form.control} name="title" render={({ field }) => (
-                <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Internal Title</FormLabel><FormControl><Input placeholder="Reference description..." className="border-slate-300 font-bold h-11 rounded-none" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                  <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Internal Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Reference description..." className="border-slate-300 font-bold h-11 rounded-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )} />
               
               <div className="space-y-2 relative">
@@ -270,7 +310,15 @@ export function NewTaskDialog() {
                     </FormControl>
                     {showDropdown && searchResults.length > 0 && (
                       <div className="absolute top-full left-0 right-0 z-50 bg-white border border-slate-200 shadow-xl max-h-48 overflow-y-auto">
-                        {searchResults.map((r, i) => (<div key={i} className="px-4 py-2.5 text-[10px] hover:bg-slate-50 cursor-pointer font-bold border-b border-slate-100" onMouseDown={() => handleSelectAddress(r)}>{r.properties.formatted}</div>))}
+                        {searchResults.map((r, i) => (
+                          <div 
+                            key={i} 
+                            className="px-4 py-2.5 text-[10px] hover:bg-slate-50 cursor-pointer font-bold border-b border-slate-100" 
+                            onMouseDown={() => handleSelectAddress(r)}
+                          >
+                            {r.properties.formatted}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </FormItem>
@@ -278,119 +326,199 @@ export function NewTaskDialog() {
               </div>
 
               <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Detailed Scope</FormLabel><FormControl><Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                  <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Detailed Scope</FormLabel>
+                  <FormControl>
+                    <Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )} />
 
               <div className="space-y-6 pt-6 border-t border-slate-100">
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Operational Requirements</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <FormField control={form.control} name="surveyRequired" render={({ field }) => (<FormItem className="flex items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" /></FormControl><FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Survey</FormLabel></FormItem>)} />
-                  <FormField control={form.control} name="permitRequired" render={({ field }) => (<FormItem className="flex items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" /></FormControl><FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Permit</FormLabel></FormItem>)} />
-                  <FormField control={form.control} name="materialsRequired" render={({ field }) => (<FormItem className="flex items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" /></FormControl><FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Materials</FormLabel></FormItem>)} />
-                  <FormField control={form.control} name="shipmentRequired" render={({ field }) => (<FormItem className="flex items-center space-x-2 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" /></FormControl><FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Shipment</FormLabel></FormItem>)} />
+                  <FormField 
+                    control={form.control} 
+                    name="surveyRequired" 
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
+                        </FormControl>
+                        <FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Survey</FormLabel>
+                      </FormItem>
+                    )} 
+                  />
+                  <FormField 
+                    control={form.control} 
+                    name="permitRequired" 
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
+                        </FormControl>
+                        <FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Permit</FormLabel>
+                      </FormItem>
+                    )} 
+                  />
+                  <FormField 
+                    control={form.control} 
+                    name="materialsRequired" 
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
+                        </FormControl>
+                        <FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Materials</FormLabel>
+                      </FormItem>
+                    )} 
+                  />
+                  <FormField 
+                    control={form.control} 
+                    name="shipmentRequired" 
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
+                        </FormControl>
+                        <FormLabel className="font-bold text-slate-950 text-[11px] uppercase cursor-pointer">Shipment</FormLabel>
+                      </FormItem>
+                    )} 
+                  />
                 </div>
 
                 {surveyRequired && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-1">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FormField control={form.control} name="surveyHandledBy" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Handled By</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
-                      )} />
-                      <FormField control={form.control} name="surveyStatus" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Survey Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{SURVEY_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
-                      )} />
+                      <FormField
+                        control={form.control}
+                        name="surveyHandledBy"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[9px] font-bold uppercase text-slate-500">Handled By</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="rounded-none">
+                                <SelectItem value="PLS">PLS</SelectItem>
+                                <SelectItem value="Others">Others</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="surveyStatus"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[9px] font-bold uppercase text-slate-500">Survey Status</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="rounded-none">
+                                {SURVEY_STATUS_OPTIONS.map(s => (
+                                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                    {surveyHandledBy === 'Others' && (
-                      <FormField control={form.control} name="surveyHandlerOthers" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Specify Handler</FormLabel><FormControl><Input placeholder="Enter handler name..." className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                    )}
                   </div>
                 )}
 
                 {permitRequired && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-1">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FormField control={form.control} name="permitHandledBy" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Handled By</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="PLS">PLS</SelectItem><SelectItem value="Others">Others</SelectItem></SelectContent></Select></FormItem>
-                      )} />
-                      <FormField control={form.control} name="permitStatus" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[9px] font-bold uppercase text-slate-500">Permit Status</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="rounded-none">
-                              {PERMIT_STATUS_OPTIONS.map(s => (
-                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )} />
+                      <FormField
+                        control={form.control}
+                        name="permitHandledBy"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[9px] font-bold uppercase text-slate-500">Handled By</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="rounded-none">
+                                <SelectItem value="PLS">PLS</SelectItem>
+                                <SelectItem value="Others">Others</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="permitStatus"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-[9px] font-bold uppercase text-slate-500">Permit Status</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="rounded-none">
+                                {PERMIT_STATUS_OPTIONS.map((s) => (
+                                  <SelectItem key={s} value={s}>
+                                    {s}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                    {permitHandledBy === 'Others' && (
-                      <FormField control={form.control} name="permitHandlerOthers" render={({ field }) => (
-                        <FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Specify Handler</FormLabel><FormControl><Input placeholder="Enter handler name..." className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
-                    )}
-                  </div>
-                )}
-
-                {materialsRequired && (
-                  <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
-                    <div className="flex items-center justify-between"><p className="text-[9px] font-bold uppercase text-slate-500">Materials & Items</p><Button type="button" variant="ghost" size="sm" onClick={() => appendMaterial({ name: '', quantity: '' })} className="h-6 text-[9px] uppercase font-bold text-primary"><Plus className="h-3 w-3 mr-1" /> Add Item</Button></div>
-                    {materialFields.map((item, index) => (
-                      <div key={item.id} className="flex gap-2">
-                        <Input className="h-9 text-[10px] font-bold border-slate-300 rounded-none flex-1" placeholder="Item Name" {...form.register(`materialsList.${index}.name`)} />
-                        <Input className="h-9 text-[10px] font-bold border-slate-300 rounded-none w-20" placeholder="Qty" {...form.register(`materialsList.${index}.quantity`)} />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeMaterial(index)} className="h-9 w-9 text-destructive"><X className="h-3.5 w-3.5" /></Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {shipmentRequired && (
-                  <div className="animate-in fade-in slide-in-from-top-1">
-                    <FormField control={form.control} name="shipmentStatus" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[9px] font-bold uppercase text-slate-500 tracking-widest">Logistics Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-10 border-slate-300 rounded-none font-bold text-[10px] uppercase bg-white">
-                              <SelectValue placeholder="Select Status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="rounded-none">
-                            {['Pending', 'Shipped', 'In Transit', 'Delivered', 'Delayed'].map(s => (
-                              <SelectItem key={s} value={s} className="text-[10px] uppercase font-bold">{s}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )} />
                   </div>
                 )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
                 <FormField control={form.control} name="confirmationStatus" render={({ field }) => (
-                  <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Confirmation</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none"><SelectItem value="Pending">Pending</SelectItem><SelectItem value="Confirmed">Confirmed</SelectItem></SelectContent></Select></FormItem>
+                  <FormItem>
+                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Confirmation</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-none">
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="Confirmed">Confirmed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
                 )} />
                 <FormField control={form.control} name="overallWorkStatus" render={({ field }) => (
-                  <FormItem><FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Lifecycle Status</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger></FormControl><SelectContent className="rounded-none">{['Pending', 'In Progress', 'Completed', 'On Hold'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></FormItem>
+                  <FormItem>
+                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Lifecycle Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none"><SelectValue /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="rounded-none">
+                        {['Pending', 'In Progress', 'Completed', 'On Hold'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
                 )} />
               </div>
-
-              {confirmationStatus === 'Confirmed' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-5 bg-slate-50 border border-slate-200 rounded-none animate-in fade-in slide-in-from-top-1">
-                  <FormField control={form.control} name="dateInitiated" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Initiation Date</FormLabel><FormControl><Input type="date" className="h-10 text-[10px] font-bold border-slate-300 rounded-none bg-white" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name="dateCompleted" render={({ field }) => (<FormItem><FormLabel className="text-[9px] font-bold uppercase text-slate-500">Completion Date</FormLabel><FormControl><Input type="date" className="h-10 text-[10px] font-bold border-slate-300 rounded-none bg-white" {...field} /></FormControl></FormItem>)} />
-                </div>
-              )}
               <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-xs tracking-widest" disabled={isSubmitting}>{isSubmitting ? <Loader2 className="animate-spin mr-2" /> : 'Create Entry'}</Button>
             </form>
           </Form>
