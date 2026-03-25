@@ -276,7 +276,7 @@ export default function TasksPage() {
                   <TableHeader className="bg-slate-50 border-b border-slate-200 hidden md:table-header-group">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="font-bold text-slate-950 py-5 pl-8 w-12 text-center text-[11px] tracking-widest">#</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 w-1/4 text-[11px] tracking-widest">Address - Title</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase w-1/4 text-[11px] tracking-widest">Address - Title</TableHead>
                       <TableHead className="font-bold text-slate-950 py-5 uppercase text-[11px] tracking-widest">Task Details</TableHead>
                       <TableHead className="font-bold text-slate-950 py-5 uppercase text-[11px] tracking-widest text-center">Status</TableHead>
                       <TableHead className="font-bold text-slate-950 py-5 text-right pr-8 uppercase text-[11px] tracking-widest">Manage</TableHead>
