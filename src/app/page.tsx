@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
 import * as React from "react"
+import { format } from "date-fns"
 
 export default function Dashboard() {
   const firestore = useFirestore();
@@ -130,8 +131,17 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
-            {/* Quick Tasks - Priority Order 1 on Mobile */}
-            <div className="col-span-full md:col-span-4 order-1 md:order-2">
+            {/* Stat Cards - Top on Desktop (md:order-first), Bottom on Mobile (order-3) */}
+            <div className="col-span-full order-3 md:order-first">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2 md:mb-0">
+                <StatCard title="Active" value={activeTasksCount.toString()} change="Current Items" trend="neutral" icon={Zap} />
+                <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime Items" trend="neutral" icon={Clock3} />
+                <StatCard title="Completed" value={completedTasksCount.toString()} change="Closed Items" trend="up" icon={BarChart3} />
+              </div>
+            </div>
+
+            {/* Quick Tasks - Order 1 on Mobile */}
+            <div className="col-span-full md:col-span-4 order-1 md:order-none">
               <Card className="border-slate-300 shadow-none rounded-none">
                 <CardHeader className="border-b border-slate-100 pb-3">
                   <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Quick Tasks</CardTitle>
@@ -187,8 +197,8 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Recent Entries - Priority Order 2 on Mobile */}
-            <div className="col-span-full md:col-span-8 order-2 md:order-1">
+            {/* Recent Entries - Order 2 on Mobile */}
+            <div className="col-span-full md:col-span-8 order-2 md:order-none">
               <Card className="border-slate-300 shadow-none rounded-none h-full">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200 pb-4">
                   <CardTitle className="text-[11px] font-bold uppercase tracking-widest text-slate-950">Recent Entries</CardTitle>
@@ -232,15 +242,6 @@ export default function Dashboard() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-
-            {/* Stat Cards - Priority Order 3 on Mobile */}
-            <div className="col-span-full order-3 md:order-none">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatCard title="Active" value={activeTasksCount.toString()} change="Current" trend="neutral" icon={Zap} />
-                <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime" trend="neutral" icon={Clock3} />
-                <StatCard title="Completed" value={completedTasksCount.toString()} change="Closed" trend="up" icon={BarChart3} />
-              </div>
             </div>
           </div>
         </main>

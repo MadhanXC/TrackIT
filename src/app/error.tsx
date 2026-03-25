@@ -18,36 +18,36 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-      <Card className="w-full max-w-md border-none shadow-modern">
+    <div className="flex min-h-screen w-full items-center justify-center bg-slate-50 p-4">
+      <Card className="w-full max-w-md border-none shadow-modern rounded-none">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-none bg-destructive/10">
             <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
-          <CardTitle className="text-2xl font-headline font-bold">Something went wrong</CardTitle>
-          <CardDescription>
-            We encountered an unexpected error while loading the workspace.
+          <CardTitle className="text-2xl font-headline font-bold uppercase tracking-tight">Something went wrong</CardTitle>
+          <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Operational workspace failure detected
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg bg-slate-100 p-4 font-mono text-xs text-slate-700 overflow-auto max-h-40">
-            {error.message || 'An unknown error occurred.'}
+          <div className="rounded-none bg-slate-100 p-4 font-mono text-[10px] text-slate-700 overflow-auto max-h-40 border border-slate-200">
+            {error.message || 'An unknown error occurred during process execution.'}
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-2">
+        <CardFooter className="flex flex-col gap-2 pt-6">
           <Button 
             onClick={() => reset()} 
-            className="w-full gap-2 font-bold shadow-modern"
+            className="w-full gap-2 font-bold bg-slate-950 text-white rounded-none h-12 uppercase text-[10px] tracking-widest shadow-none"
           >
             <RefreshCcw className="h-4 w-4" />
-            Try Again
+            Restart Workspace
           </Button>
           <Button 
             variant="ghost" 
             onClick={() => window.location.href = '/'} 
-            className="w-full text-muted-foreground"
+            className="w-full text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-950"
           >
-            Back to Dashboard
+            Return to Dashboard
           </Button>
         </CardFooter>
       </Card>

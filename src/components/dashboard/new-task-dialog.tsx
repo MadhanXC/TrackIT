@@ -337,7 +337,7 @@ export function NewTaskDialog() {
                 name="description" 
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Detailed Scope</FormLabel>
+                    <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Description</FormLabel>
                     <FormControl>
                       <Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none" {...field} />
                     </FormControl>
@@ -347,7 +347,7 @@ export function NewTaskDialog() {
               />
 
               <div className="space-y-6 pt-6 border-t border-slate-100">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Operational Requirements</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Requirements</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <FormField 
                     control={form.control} 
@@ -490,26 +490,6 @@ export function NewTaskDialog() {
                     </div>
                   </div>
                 )}
-
-                {materialsRequired && (
-                  <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
-                    <div className="flex items-center justify-between">
-                      <p className="text-[9px] font-bold uppercase">Materials</p>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => appendMaterial({ name: '', quantity: '' })} className="h-6 text-[9px] uppercase font-bold text-primary">
-                        <Plus className="h-3 w-3 mr-1" /> Add
-                      </Button>
-                    </div>
-                    {materialFields.map((item, index) => (
-                      <div key={item.id} className="flex gap-2">
-                        <Input className="h-9 text-[10px] font-bold border-slate-300 rounded-none flex-1" placeholder="Item" {...form.register(`materialsList.${index}.name`)} />
-                        <Input className="h-9 text-[10px] font-bold border-slate-300 rounded-none w-20" placeholder="Qty" {...form.register(`materialsList.${index}.quantity`)} />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeMaterial(index)} className="h-9 w-9 text-destructive">
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
@@ -538,7 +518,7 @@ export function NewTaskDialog() {
                   name="overallWorkStatus" 
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Lifecycle Status</FormLabel>
+                      <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest">Status</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none">

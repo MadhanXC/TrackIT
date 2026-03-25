@@ -203,7 +203,7 @@ export default function TasksPage() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
-                  <SelectItem value="all">All Phases</SelectItem>
+                  <SelectItem value="all">All Status</SelectItem>
                   {['Pending', 'In Progress', 'On Hold', 'Completed'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -278,9 +278,9 @@ export default function TasksPage() {
                   <TableHeader className="bg-slate-50 border-b border-slate-200">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="font-bold text-slate-950 py-5 pl-8 w-12 text-center text-[10px] tracking-widest">#</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 w-1/4 text-[10px] tracking-widest">Address - Title</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest">Operational Intelligence</TableHead>
-                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest text-center">Lifecycle</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 w-1/4 text-[10px] tracking-widest">ADDRESS - TITLE</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest">Task Details</TableHead>
+                      <TableHead className="font-bold text-slate-950 py-5 uppercase text-[10px] tracking-widest text-center">Status</TableHead>
                       <TableHead className="font-bold text-slate-950 py-5 text-right pr-8 uppercase text-[10px] tracking-widest">Manage</TableHead>
                     </TableRow>
                   </TableHeader>
