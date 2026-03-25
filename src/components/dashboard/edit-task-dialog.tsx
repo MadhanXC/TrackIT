@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { 
@@ -32,11 +32,9 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { 
-  Plus, 
-  X,
+  Save,
   Loader2,
   Search,
-  Save,
   Layout,
   FileText,
   Package,
@@ -130,6 +128,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
   const street1Value = form.watch('street1');
   const surveyRequired = form.watch('surveyRequired');
   const permitRequired = form.watch('permitRequired');
+  const confirmationStatus = form.watch('confirmationStatus');
 
   React.useEffect(() => {
     const fetchAddresses = async () => {
@@ -625,6 +624,42 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     )} 
                   />
                 </div>
+
+                {confirmationStatus === 'Confirmed' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-1">
+                    <FormField 
+                      control={form.control} 
+                      name="dateInitiated" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2">
+                            <Calendar className="h-3 w-3" /> Date Initiated
+                          </FormLabel>
+                          <FormControl>
+                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} 
+                    />
+                    <FormField 
+                      control={form.control} 
+                      name="dateCompleted" 
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-slate-950 font-bold uppercase text-[9px] tracking-widest flex items-center gap-2">
+                            <Calendar className="h-3 w-3" /> Date Completed
+                          </FormLabel>
+                          <FormControl>
+                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} 
+                    />
+                  </div>
+                )}
+
                 <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-xs tracking-widest" disabled={isSubmitting}>
                   {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />} Update Changes
                 </Button>

@@ -36,7 +36,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
   const summaryHeight = config.summaryStats ? summaryBoxHeight + 80 : 0;
   const totalContentHeight = headerHeight + tableRowsHeight + summaryHeight + margin + bottomPadding;
   
-  // PDF height is calculated dynamically based on content
+  // PDF height is calculated dynamically based on content to close just below summary
   const pageHeight = Math.max(800, totalContentHeight); 
 
   const pdfDoc = await PDFDocument.create();
@@ -55,7 +55,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
     color: rgb(0, 0, 0),
   });
   
-  // Date of Report Generation
+  // Date of Report Generation for audit traceability
   page.drawText(`Report Generated: ${format(new Date(), "PPP p")}`, {
     x: pageWidth - margin - 350,
     y: currentY,
@@ -185,7 +185,7 @@ export async function generateAuditPdf(tasks: any[], config: AuditReportConfig) 
     currentY -= rowHeight;
   }
 
-  // OPERATIONAL SUMMARY at Bottom
+  // OPERATIONAL AUDIT SUMMARY - Positioned definitively below the table
   if (config.summaryStats) {
     currentY -= 40;
     page.drawText('SUMMARY', {

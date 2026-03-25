@@ -135,7 +135,7 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
             {/* Stat Cards - Top on Desktop, Bottom on Mobile */}
-            <div className="col-span-full order-3 md:order-first">
+            <div className="col-span-full order-last md:order-first">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard title="Active" value={activeTasksCount.toString()} change="Current Items" trend="neutral" icon={Zap} />
                 <StatCard title="Total" value={(rawTasks?.length || 0).toString()} change="Lifetime Items" trend="neutral" icon={Clock3} />
