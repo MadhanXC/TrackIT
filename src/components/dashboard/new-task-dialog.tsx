@@ -59,9 +59,9 @@ const formSchema = z.object({
   priority: z.enum(['Low', 'Medium', 'High', 'Urgent']),
   title: z.string().min(2, 'Title required'),
   street1: z.string().min(1, 'Address required'),
-  pocName: z.string().min(1, 'POC contact info required'),
+  pocName: z.string().optional(),
   description: z.string().min(5, 'Description required'),
-  source: z.enum(['Call', 'Email', 'Text', 'In-person']).default('Call'),
+  source: z.enum(['Call', 'Email', 'Text', 'In-person', 'To-do entry']).default('Call'),
   surveyRequired: z.boolean().default(false),
   surveyHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
   surveyHandlerOthers: z.string().optional(),
@@ -222,7 +222,7 @@ export function NewTaskDialog() {
                       <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Type</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -242,7 +242,7 @@ export function NewTaskDialog() {
                       <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Priority</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -261,12 +261,12 @@ export function NewTaskDialog() {
                       <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Source</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-none">
-                          {['Call', 'Email', 'Text', 'In-person'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          {['Call', 'Email', 'Text', 'In-person', 'To-do entry'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </FormItem>
@@ -280,12 +280,12 @@ export function NewTaskDialog() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
-                      <User className="h-3 w-3" /> POCs
+                      <User className="h-3 w-3" /> POC (Optional)
                     </FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Enter POC contact information..." 
-                        className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none text-[14px]" 
+                        className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none text-[13px]" 
                         {...field} 
                       />
                     </FormControl>
@@ -301,7 +301,7 @@ export function NewTaskDialog() {
                   <FormItem>
                     <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Reference Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Internal label..." className="border-slate-300 font-bold h-11 rounded-none text-[14px]" {...field} />
+                      <Input placeholder="Internal label..." className="border-slate-300 font-bold h-11 rounded-none text-[13px]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -320,7 +320,7 @@ export function NewTaskDialog() {
                           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                           <Input 
                             placeholder="Search location..." 
-                            className="pl-10 border-slate-300 font-bold h-11 rounded-none text-[14px]" 
+                            className="pl-10 border-slate-300 font-bold h-11 rounded-none text-[13px]" 
                             {...field} 
                             autoComplete="off" 
                             onFocus={() => setIsInputFocused(true)} 
@@ -333,7 +333,7 @@ export function NewTaskDialog() {
                           {searchResults.map((r, i) => (
                             <div 
                               key={i} 
-                              className="px-4 py-2.5 text-[12px] hover:bg-slate-50 cursor-pointer font-bold border-b border-slate-100" 
+                              className="px-4 py-2.5 text-[10px] hover:bg-slate-50 cursor-pointer font-bold border-b border-slate-100" 
                               onMouseDown={() => handleSelectAddress(r)}
                             >
                               {r.properties.formatted}
@@ -353,7 +353,7 @@ export function NewTaskDialog() {
                   <FormItem>
                     <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Details</FormLabel>
                     <FormControl>
-                      <Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none text-[14px]" {...field} />
+                      <Textarea className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none text-[13px]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -371,7 +371,7 @@ export function NewTaskDialog() {
                         <FormControl>
                           <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                         </FormControl>
-                        <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Survey</FormLabel>
+                        <FormLabel className="font-bold text-slate-950 text-[10px] uppercase cursor-pointer">Survey</FormLabel>
                       </FormItem>
                     )} 
                   />
@@ -383,7 +383,7 @@ export function NewTaskDialog() {
                         <FormControl>
                           <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                         </FormControl>
-                        <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Permit</FormLabel>
+                        <FormLabel className="font-bold text-slate-950 text-[10px] uppercase cursor-pointer">Permit</FormLabel>
                       </FormItem>
                     )} 
                   />
@@ -395,7 +395,7 @@ export function NewTaskDialog() {
                         <FormControl>
                           <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                         </FormControl>
-                        <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Materials</FormLabel>
+                        <FormLabel className="font-bold text-slate-950 text-[10px] uppercase cursor-pointer">Materials</FormLabel>
                       </FormItem>
                     )} 
                   />
@@ -407,7 +407,7 @@ export function NewTaskDialog() {
                         <FormControl>
                           <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                         </FormControl>
-                        <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Shipment</FormLabel>
+                        <FormLabel className="font-bold text-slate-950 text-[10px] uppercase cursor-pointer">Shipment</FormLabel>
                       </FormItem>
                     )} 
                   />
@@ -420,10 +420,10 @@ export function NewTaskDialog() {
                       name="surveyHandledBy" 
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handled By</FormLabel>
+                          <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Handled By</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
+                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
@@ -441,9 +441,9 @@ export function NewTaskDialog() {
                         name="surveyHandlerOthers" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
+                            <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Entity name..." className="h-9 border-slate-300 rounded-none font-bold text-[12px]" {...field} />
+                              <Input placeholder="Entity name..." className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -455,10 +455,10 @@ export function NewTaskDialog() {
                       name="surveyStatus" 
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Status</FormLabel>
+                          <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Status</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
+                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
@@ -479,10 +479,10 @@ export function NewTaskDialog() {
                       name="permitHandledBy" 
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handled By</FormLabel>
+                          <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Handled By</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
+                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
@@ -500,9 +500,9 @@ export function NewTaskDialog() {
                         name="permitHandlerOthers" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
+                            <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Agency/Entity..." className="h-9 border-slate-300 rounded-none font-bold text-[12px]" {...field} />
+                              <Input placeholder="Agency/Entity..." className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -514,10 +514,10 @@ export function NewTaskDialog() {
                       name="permitStatus" 
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Status</FormLabel>
+                          <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Status</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
+                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
@@ -534,7 +534,7 @@ export function NewTaskDialog() {
                 {materialsRequired && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-1 bg-slate-50 p-4 border border-slate-200">
                     <div className="flex items-center justify-between">
-                      <FormLabel className="text-[11px] font-bold uppercase text-slate-500 flex items-center gap-2">
+                      <FormLabel className="text-[10px] font-bold uppercase text-slate-500 flex items-center gap-2">
                         <Package className="h-3 w-3" /> Inventory List
                       </FormLabel>
                       <Button 
@@ -556,14 +556,14 @@ export function NewTaskDialog() {
                           <Label className="text-[10px] font-bold uppercase text-slate-400">Item Name</Label>
                           <Input 
                             {...form.register(`materialsList.${index}.name` as const)} 
-                            className="h-9 border-slate-300 rounded-none font-bold text-[12px] bg-white" 
+                            className="h-9 border-slate-300 rounded-none font-bold text-[10px] bg-white" 
                           />
                         </div>
                         <div className="w-24 space-y-1">
                           <Label className="text-[10px] font-bold uppercase text-slate-400">Qty</Label>
                           <Input 
                             {...form.register(`materialsList.${index}.quantity` as const)} 
-                            className="h-9 border-slate-300 rounded-none font-bold text-[12px] bg-white" 
+                            className="h-9 border-slate-300 rounded-none font-bold text-[10px] bg-white" 
                           />
                         </div>
                         <Button 
@@ -587,12 +587,12 @@ export function NewTaskDialog() {
                       name="shipmentStatus" 
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-bold uppercase text-slate-500 flex items-center gap-2">
+                          <FormLabel className="text-[10px] font-bold uppercase text-slate-500 flex items-center gap-2">
                             <Truck className="h-3 w-3" /> Shipment State
                           </FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px] bg-white">
+                              <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px] bg-white">
                                 <SelectValue placeholder="Select state..." />
                               </SelectTrigger>
                             </FormControl>
@@ -617,7 +617,7 @@ export function NewTaskDialog() {
                       <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Confirmation</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -637,7 +637,7 @@ export function NewTaskDialog() {
                       <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Workflow State</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                          <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -661,7 +661,7 @@ export function NewTaskDialog() {
                           <Calendar className="h-3 w-3" /> Date Initiated
                         </FormLabel>
                         <FormControl>
-                          <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[12px]" {...field} />
+                          <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[10px]" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -676,7 +676,7 @@ export function NewTaskDialog() {
                           <Calendar className="h-3 w-3" /> Date Completed
                         </FormLabel>
                         <FormControl>
-                          <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[12px]" {...field} />
+                          <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[10px]" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -685,7 +685,7 @@ export function NewTaskDialog() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-[12px] tracking-widest" disabled={isSubmitting}>
+              <Button type="submit" className="w-full font-bold h-14 bg-slate-950 text-white rounded-none uppercase text-[10px] tracking-widest" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : 'Create Entry'}
               </Button>
             </form>

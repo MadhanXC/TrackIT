@@ -28,7 +28,9 @@ import {
   Printer,
   CheckSquare,
   Settings2,
-  Eye
+  Eye,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { 
   format, 
@@ -49,9 +51,12 @@ import { cn } from "@/lib/utils"
 import { generateAuditPdf } from "@/lib/pdf-service"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+const PREVIEW_ITEMS_PER_PAGE = 10;
+
 export function ReportDialog() {
   const [open, setOpen] = React.useState(false)
   const [isExporting, setIsExporting] = React.useState(false)
+  const [previewPage, setPreviewPage] = React.useState(1)
   const firestore = useFirestore()
   const { user, isUserLoading } = useUser()
   const [mounted, setMounted] = React.useState(false)
@@ -149,6 +154,13 @@ export function ReportDialog() {
     if (selectedIds.size === 0) return filteredTasks;
     return filteredTasks.filter(t => selectedIds.has(t.id));
   }, [filteredTasks, selectedIds])
+
+  const paginatedPreviewTasks = React.useMemo(() => {
+    const start = (previewPage - 1) * PREVIEW_ITEMS_PER_PAGE;
+    return filteredTasks.slice(start, start + PREVIEW_ITEMS_PER_PAGE);
+  }, [filteredTasks, previewPage]);
+
+  const totalPreviewPages = Math.ceil(filteredTasks.length / PREVIEW_ITEMS_PER_PAGE);
 
   const stats = React.useMemo(() => {
     if (!reportTasks.length) return null;
@@ -374,8 +386,8 @@ export function ReportDialog() {
   )
 
   const PreviewPanel = () => (
-    <div className="flex-1 bg-white relative overflow-y-auto">
-      <div className="p-4 sm:p-8">
+    <div className="flex-1 bg-white relative overflow-y-auto flex flex-col">
+      <div className="p-4 sm:p-8 flex-1">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-40 gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-slate-200" />
@@ -398,82 +410,111 @@ export function ReportDialog() {
               </div>
             </div>
 
-            <div className="border border-slate-200 bg-white overflow-x-auto">
+            <div className="border border-slate-200 bg-white overflow-x-auto shadow-sm">
               <table className="w-full text-left text-[10px] border-collapse min-w-[1800px]">
                 <thead>
-                  <tr className="bg-slate-50 border-b font-bold uppercase tracking-wider">
-                    <th className="px-4 py-4 border-r w-12 text-center">
+                  <tr className="bg-slate-950 text-white border-b font-bold uppercase tracking-wider">
+                    <th className="px-4 py-4 border-r border-slate-800 w-12 text-center">
                       <CheckSquare className="h-3 w-3 mx-auto text-slate-400" />
                     </th>
-                    <th className="px-4 py-4 border-r w-12 text-center">#</th>
-                    <th className="px-4 py-4 border-r min-w-[500px]">Address & Title</th>
-                    {includePOC && <th className="px-4 py-4 border-r min-w-[200px]">Site POC</th>}
-                    <th className="px-4 py-4 border-r w-32">Type</th>
-                    <th className="px-4 py-4 border-r w-32">State</th>
-                    {includeSurvey && <th className="px-4 py-4 border-r min-w-[150px]">Survey Phase</th>}
-                    {includePermit && <th className="px-4 py-4 border-r min-w-[150px]">Permit Status</th>}
-                    {includeMaterials && <th className="px-4 py-4 border-r min-w-[180px]">Inventory</th>}
-                    {includeShipment && <th className="px-4 py-4 border-r w-32">Shipments</th>}
-                    <th className="px-4 py-4 border-r w-28">Created</th>
-                    <th className="px-4 py-4 border-r w-28">Initiated</th>
-                    <th className="px-4 py-4 w-28">Completed</th>
+                    <th className="px-4 py-4 border-r border-slate-800 w-12 text-center">#</th>
+                    <th className="px-4 py-4 border-r border-slate-800 min-w-[500px]">ADDRESS & TITLE</th>
+                    {includePOC && <th className="px-4 py-4 border-r border-slate-800 min-w-[200px]">SITE POC</th>}
+                    <th className="px-4 py-4 border-r border-slate-800 w-32">TYPE</th>
+                    <th className="px-4 py-4 border-r border-slate-800 w-32">STATE</th>
+                    {includeSurvey && <th className="px-4 py-4 border-r border-slate-800 min-w-[150px]">SURVEY PHASE</th>}
+                    {includePermit && <th className="px-4 py-4 border-r border-slate-800 min-w-[150px]">PERMIT STATUS</th>}
+                    {includeMaterials && <th className="px-4 py-4 border-r border-slate-800 min-w-[180px]">INVENTORY</th>}
+                    {includeShipment && <th className="px-4 py-4 border-r border-slate-800 w-32">SHIPMENTS</th>}
+                    <th className="px-4 py-4 border-r border-slate-800 w-28">CREATED</th>
+                    <th className="px-4 py-4 border-r border-slate-800 w-28">INITIATED</th>
+                    <th className="px-4 py-4 w-28">COMPLETED</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {filteredTasks.map((task, idx) => (
-                    <tr 
-                      key={task.id} 
-                      className={cn(
-                        "font-medium text-slate-900 border-b last:border-0 hover:bg-slate-50 transition-colors",
-                        selectedIds.has(task.id) ? "bg-primary/5" : "bg-white"
-                      )}
-                    >
-                      <td className="px-4 py-4 border-r text-center">
-                        <Checkbox 
-                          checked={selectedIds.has(task.id)} 
-                          onCheckedChange={() => toggleSelection(task.id)} 
-                          className="rounded-none"
-                        />
-                      </td>
-                      <td className="px-4 py-4 border-r text-center font-bold text-slate-400">{idx + 1}</td>
-                      <td className="px-4 py-4 border-r font-bold">
-                        <div className="flex flex-col">
-                          <span>{task.siteAddressStreet}</span>
-                          <span className="text-[9px] text-slate-400 uppercase mt-1 leading-none">{task.title}</span>
-                        </div>
-                      </td>
-                      {includePOC && <td className="px-4 py-4 border-r whitespace-pre-wrap">{task.pocName || '—'}</td>}
-                      <td className="px-4 py-4 border-r uppercase font-bold">{task.workItemType}</td>
-                      <td className="px-4 py-4 border-r uppercase font-bold">{task.overallWorkStatus}</td>
-                      {includeSurvey && <td className="px-4 py-4 border-r"><div className="flex flex-col"><span className="font-bold uppercase">{task.surveyRequired ? task.surveyStatus : 'N/A'}</span>{task.surveyRequired && <span className="text-[10px] text-primary font-bold uppercase mt-0.5">{task.surveyHandler}</span>}</div></td>}
-                      {includePermit && <td className="px-4 py-4 border-r"><div className="flex flex-col"><span className="font-bold uppercase">{task.permitRequired ? task.permitStatus : 'N/A'}</span>{task.permitRequired && <span className="text-[10px] text-primary font-bold uppercase mt-0.5">{task.permitHandler}</span>}</div></td>}
-                      {includeMaterials && <td className="px-4 py-4 border-r"><div className="flex flex-col gap-0.5">{task.materialsRequired && task.materialsList?.length > 0 ? task.materialsList.map((m: any, i: number) => <span key={i} className="text-[10px] font-bold uppercase leading-tight bg-slate-50 px-1 py-0.5 border border-slate-100 truncate">{m.name} (x{m.quantity})</span>) : 'None'}</div></td>}
-                      {includeShipment && <td className="px-4 py-4 border-r uppercase font-bold">{task.shipmentRequired ? task.shipmentStatus : 'N/A'}</td>}
-                      <td className="px-4 py-4 border-r font-bold">{task.createdAt ? format(new Date(task.createdAt), "yyyy-MM-dd") : '—'}</td>
-                      <td className="px-4 py-4 border-r font-bold">{task.dateInitiated || '—'}</td>
-                      <td className="px-4 py-4 font-bold">{task.dateCompleted || 'Not Completed'}</td>
-                    </tr>
-                  ))}
+                  {paginatedPreviewTasks.map((task, idx) => {
+                    const rowIdx = (previewPage - 1) * PREVIEW_ITEMS_PER_PAGE + idx;
+                    return (
+                      <tr 
+                        key={task.id} 
+                        className={cn(
+                          "font-medium text-slate-900 border-b last:border-0 hover:bg-slate-50 transition-colors",
+                          selectedIds.has(task.id) ? "bg-primary/5" : "bg-white"
+                        )}
+                      >
+                        <td className="px-4 py-4 border-r text-center">
+                          <Checkbox 
+                            checked={selectedIds.has(task.id)} 
+                            onCheckedChange={() => toggleSelection(task.id)} 
+                            className="rounded-none"
+                          />
+                        </td>
+                        <td className="px-4 py-4 border-r text-center font-bold text-slate-400">{rowIdx + 1}</td>
+                        <td className="px-4 py-4 border-r font-bold">
+                          <div className="flex flex-col">
+                            <span className="text-[13px]">{task.siteAddressStreet}</span>
+                            <span className="text-[10px] text-slate-400 uppercase mt-1 leading-none tracking-widest">{task.title}</span>
+                          </div>
+                        </td>
+                        {includePOC && <td className="px-4 py-4 border-r whitespace-pre-wrap">{task.pocName || '—'}</td>}
+                        <td className="px-4 py-4 border-r uppercase font-bold">{task.workItemType}</td>
+                        <td className="px-4 py-4 border-r uppercase font-bold">{task.overallWorkStatus}</td>
+                        {includeSurvey && <td className="px-4 py-4 border-r"><div className="flex flex-col"><span className="font-bold uppercase">{task.surveyRequired ? task.surveyStatus : 'N/A'}</span>{task.surveyRequired && <span className="text-[10px] text-primary font-bold uppercase mt-0.5">{task.surveyHandler}</span>}</div></td>}
+                        {includePermit && <td className="px-4 py-4 border-r"><div className="flex flex-col"><span className="font-bold uppercase">{task.permitRequired ? task.permitStatus : 'N/A'}</span>{task.permitRequired && <span className="text-[10px] text-primary font-bold uppercase mt-0.5">{task.permitHandler}</span>}</div></td>}
+                        {includeMaterials && <td className="px-4 py-4 border-r"><div className="flex flex-col gap-0.5">{task.materialsRequired && task.materialsList?.length > 0 ? task.materialsList.map((m: any, i: number) => <span key={i} className="text-[10px] font-bold uppercase leading-tight bg-slate-50 px-1 py-0.5 border border-slate-100 truncate">{m.name} (x{m.quantity})</span>) : 'None'}</div></td>}
+                        {includeShipment && <td className="px-4 py-4 border-r uppercase font-bold">{task.shipmentRequired ? task.shipmentStatus : 'N/A'}</td>}
+                        <td className="px-4 py-4 border-r font-bold">{task.createdAt ? format(new Date(task.createdAt), "yyyy-MM-dd") : '—'}</td>
+                        <td className="px-4 py-4 border-r font-bold">{task.dateInitiated || '—'}</td>
+                        <td className="px-4 py-4 font-bold">{task.dateCompleted || 'Not Completed'}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
+            {filteredTasks.length > PREVIEW_ITEMS_PER_PAGE && (
+              <div className="py-4 bg-slate-50/50 border border-slate-100 flex items-center justify-center gap-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={previewPage === 1} 
+                  onClick={() => setPreviewPage(p => Math.max(1, p - 1))}
+                  className="rounded-none h-8 font-bold uppercase text-[10px] tracking-widest border-slate-200"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                </Button>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Page {previewPage} of {totalPreviewPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={previewPage === totalPreviewPages} 
+                  onClick={() => setPreviewPage(p => Math.min(totalPreviewPages, p + 1))}
+                  className="rounded-none h-8 font-bold uppercase text-[10px] tracking-widest border-slate-200"
+                >
+                  Next <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            )}
+
             {stats && (
               <div className="pt-8 border-t border-slate-200">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-slate-950 mb-6 border-l-4 border-primary pl-3">Summary</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950 mb-6 border-l-4 border-primary pl-3">Operational Summary</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[
                     {l:'Total Items', v:stats.total}, 
                     {l:'Completion Rate', v:`${stats.successRate}%`}, 
                     {l:'Pending Items', v:stats.active}, 
-                    {l:'Survey Phase', v:`${stats.surveys.total} Total`, s:`Pending: ${stats.surveys.pending} / Completed: ${stats.surveys.completed}`}, 
-                    {l:'Permit Status', v:`${stats.permits.total} Total`, s:`Pending: ${stats.permits.pending} / Approved: ${stats.permits.approved}`}, 
-                    {l:'Shipment Status', v:`${stats.shipments.total} Total`, s:`Pending: ${stats.shipments.pending} / Delivered: ${stats.shipments.delivered}`}
+                    {l:'Survey Phase', v:`${stats.surveys.total} Total Items`, s:`Pending: ${stats.surveys.pending} / Completed: ${stats.surveys.completed}`}, 
+                    {l:'Permit Status', v:`${stats.permits.total} Total Items`, s:`Pending: ${stats.permits.pending} / Approved: ${stats.permits.approved}`}, 
+                    {l:'Shipment Status', v:`${stats.shipments.total} Total Items`, s:`Pending: ${stats.shipments.pending} / Delivered: ${stats.shipments.delivered}`}
                   ].map((m, i) => (
                     <div key={i} className="p-4 bg-slate-50/50 border border-slate-100">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{m.l}</p>
                       <p className="text-xl font-bold text-slate-950">{m.v}</p>
-                      {m.s && <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">{m.s}</p>}
+                      {m.s && <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-tight">{m.s}</p>}
                     </div>
                   ))}
                 </div>
@@ -492,7 +533,7 @@ export function ReportDialog() {
           <FileText className="h-4 w-4 mr-2" /> Report
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-7xl w-[98vw] h-[95vh] rounded-none border-none p-0 bg-white overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl w-[98vw] h-[95vh] rounded-none border-none p-0 bg-white overflow-hidden flex flex-col shadow-2xl">
         <DialogHeader className="p-4 sm:p-6 border-b border-slate-200 bg-white z-50 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-slate-950 flex items-center justify-center shrink-0">
@@ -501,7 +542,7 @@ export function ReportDialog() {
             <DialogTitle className="text-base sm:text-xl font-bold uppercase tracking-tight">Report Generator</DialogTitle>
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-            <Button variant="ghost" size="sm" onClick={() => { setBasis("createdAt"); setTimeFrame("all"); setSelectedIds(new Set()); }} className="font-bold rounded-none h-10 px-3 uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-950 shrink-0">
+            <Button variant="ghost" size="sm" onClick={() => { setBasis("createdAt"); setTimeFrame("all"); setSelectedIds(new Set()); setPreviewPage(1); }} className="font-bold rounded-none h-10 px-3 uppercase text-[10px] tracking-widest text-slate-400 hover:text-slate-950 shrink-0">
               <RotateCcw className="h-4 w-4 mr-2" /> Reset
             </Button>
             <Button variant="outline" size="sm" onClick={handleExportExcel} className="font-bold rounded-none h-10 px-3 uppercase text-[10px] tracking-widest border-slate-950 text-slate-950 hover:bg-slate-50 shrink-0">
@@ -513,13 +554,11 @@ export function ReportDialog() {
           </div>
         </DialogHeader>
 
-        {/* Desktop View: Side-by-Side */}
         <div className="hidden lg:flex flex-1 overflow-hidden min-h-0">
           <ConfigPanel />
           <PreviewPanel />
         </div>
 
-        {/* Mobile View: Tabs for Configuration vs Preview */}
         <div className="flex lg:hidden flex-1 overflow-hidden min-h-0">
           <Tabs defaultValue="config" className="w-full flex flex-col h-full">
             <TabsList className="grid w-full grid-cols-2 rounded-none bg-slate-100 h-12 p-0">

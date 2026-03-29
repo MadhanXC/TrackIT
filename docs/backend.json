@@ -41,7 +41,7 @@
         "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Urgent"] },
         "overallWorkStatus": { "type": "string", "enum": ["Pending", "In Progress", "On Hold", "Completed"] },
         "confirmationStatus": { "type": "string", "enum": ["Pending", "Confirmed"] },
-        "source": { "type": "string", "enum": ["Call", "Email", "Text", "In-person"] },
+        "source": { "type": "string", "enum": ["Call", "Email", "Text", "In-person", "To-do entry"] },
         "description": { "type": "string" },
         "permitRequired": { "type": "boolean" },
         "permitStatus": { "type": "string" },

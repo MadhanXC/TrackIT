@@ -11,33 +11,45 @@ import {
   Eye,
   Pencil,
   Plus,
-  Trash2
+  Trash2,
+  ArrowUpRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { NewTaskDialog } from "@/components/dashboard/new-task-dialog"
 import { EditTaskDialog } from "@/components/dashboard/edit-task-dialog"
 import { ReportDialog } from "@/components/dashboard/report-dialog"
-import { useFirestore, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter
+} from "@/components/ui/dialog"
+import { useFirestore, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase"
 import { collection, query, doc, where } from "firebase/firestore"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useToast } from "@/hooks/use-toast"
+import { Input } from "@/components/ui/input"
 import * as React from "react"
 
 export default function Dashboard() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
   const [todoTitle, setTodoTitle] = React.useState("");
+  const [editingTodo, setEditingTodo] = React.useState<{id: string, title: string} | null>(null);
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Optimized query for recent tasks
   const recentTasksQuery = useMemoFirebase(() => {
     if (!firestore || isUserLoading || !user) return null;
     return query(
@@ -63,7 +75,6 @@ export default function Dashboard() {
     return rawTasks?.filter(t => t.overallWorkStatus === 'Completed').length || 0;
   }, [rawTasks]);
 
-  // Client-side sorting by latest entered or edited
   const sortedTasks = React.useMemo(() => {
     if (!rawTasks) return [];
     return [...rawTasks].sort((a, b) => {
@@ -102,9 +113,52 @@ export default function Dashboard() {
     });
   };
 
+  const handleUpdateTodo = () => {
+    if (!editingTodo || !firestore || !user) return;
+    updateDocumentNonBlocking(doc(firestore, 'users', user.uid, 'todos', editingTodo.id), {
+      title: editingTodo.title
+    });
+    setEditingTodo(null);
+  };
+
   const handleDeleteTodo = (todoId: string) => {
     if (!firestore || !user) return;
     deleteDocumentNonBlocking(doc(firestore, 'users', user.uid, 'todos', todoId));
+  };
+
+  const handlePromoteToWorkItem = (todo: any) => {
+    if (!firestore || !user) return;
+    
+    const workItemsRef = doc(collection(firestore, 'workItems'));
+    const now = new Date().toISOString();
+    
+    setDocumentNonBlocking(workItemsRef, {
+      id: workItemsRef.id,
+      userId: user.uid,
+      title: todo.title,
+      siteAddressStreet: "Pending Assignment",
+      workItemType: "Job",
+      priority: "Medium",
+      overallWorkStatus: "Pending",
+      source: "To-do entry",
+      createdAt: now,
+      updatedAt: now,
+      description: "Promoted from personal to-do list.",
+      confirmationStatus: "Pending",
+      permitRequired: false,
+      surveyRequired: false,
+      materialsRequired: false,
+      shipmentRequired: false
+    }, { merge: true });
+
+    updateDocumentNonBlocking(doc(firestore, 'users', user.uid, 'todos', todo.id), {
+      completed: true
+    });
+    
+    toast({
+      title: "Task Promoted",
+      description: `"${todo.title}" moved to workspace and marked as completed.`,
+    });
   };
 
   return (
@@ -138,7 +192,6 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-start">
-            {/* Stat Cards */}
             <div className="col-span-full order-last md:order-first">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard title="Active" value={activeTasksCount.toString()} change="Current items" trend="neutral" icon={Zap} />
@@ -147,7 +200,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Quick Tasks */}
             <div className="col-span-full md:col-span-4 order-1 md:order-none">
               <Card className="border-slate-300 shadow-none rounded-none bg-white">
                 <CardHeader className="bg-slate-950 border-b-0 py-3">
@@ -188,14 +240,34 @@ export default function Dashboard() {
                               {todo.title}
                             </span>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 text-slate-300 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" 
-                            onClick={() => handleDeleteTodo(todo.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 text-slate-400 hover:text-primary" 
+                              title="Edit"
+                              onClick={() => setEditingTodo({id: todo.id, title: todo.title})}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 text-slate-400 hover:text-primary" 
+                              title="Promote to Workspace"
+                              onClick={() => handlePromoteToWorkItem(todo)}
+                            >
+                              <ArrowUpRight className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 text-slate-300 hover:text-destructive" 
+                              onClick={() => handleDeleteTodo(todo.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))
                     )}
@@ -204,7 +276,6 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Recent Entries */}
             <div className="col-span-full md:col-span-8 order-2 md:order-none">
               <Card className="border-slate-300 shadow-none rounded-none h-full bg-white">
                 <CardHeader className="flex flex-row items-center justify-between bg-slate-950 border-b-0 py-3">
@@ -228,7 +299,7 @@ export default function Dashboard() {
                       sortedTasks.slice(0, 10).map((task) => (
                         <div key={task.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-slate-50 transition-colors gap-3">
                           <div className="flex flex-col gap-0.5">
-                            <h4 className="text-[13px] font-bold text-slate-950 leading-tight tracking-tight">{task.siteAddressStreet}</h4>
+                            <h4 className="text-[13px] font-bold text-slate-950 leading-tight tracking-tight uppercase">{task.siteAddressStreet}</h4>
                             <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">{task.title}</span>
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-4">
@@ -253,6 +324,26 @@ export default function Dashboard() {
           </div>
         </main>
       </SidebarInset>
+
+      <Dialog open={!!editingTodo} onOpenChange={(o) => !o && setEditingTodo(null)}>
+        <DialogContent className="rounded-none border-slate-200 shadow-xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Update Quick Task</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Input 
+              value={editingTodo?.title || ""} 
+              onChange={(e) => editingTodo && setEditingTodo({...editingTodo, title: e.target.value})}
+              className="rounded-none border-slate-200 font-bold uppercase text-[11px] h-11"
+              onKeyDown={(e) => e.key === 'Enter' && handleUpdateTodo()}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingTodo(null)} className="rounded-none font-bold uppercase text-[10px] h-10 tracking-widest">Cancel</Button>
+            <Button onClick={handleUpdateTodo} className="rounded-none bg-slate-950 text-white font-bold uppercase text-[10px] h-10 tracking-widest shadow-none">Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

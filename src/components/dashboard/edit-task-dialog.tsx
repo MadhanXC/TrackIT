@@ -63,9 +63,9 @@ const formSchema = z.object({
   priority: z.enum(['Low', 'Medium', 'High', 'Urgent']),
   title: z.string().min(2, 'Title required'),
   street1: z.string().min(1, 'Address required'),
-  pocName: z.string().min(1, 'POC contact info required'),
+  pocName: z.string().optional(),
   description: z.string().min(5, 'Description required'),
-  source: z.enum(['Call', 'Email', 'Text', 'In-person']).default('Call'),
+  source: z.enum(['Call', 'Email', 'Text', 'In-person', 'To-do entry']).default('Call'),
   surveyRequired: z.boolean().default(false),
   surveyHandledBy: z.enum(['PLS', 'Others']).default('PLS'),
   surveyHandlerOthers: z.string().optional(),
@@ -94,7 +94,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [isInputFocused, setIsInputFocused] = React.useState(false);
   
-  const lastFetchedValueRef = React.useRef<string>(task.siteAddressStreet?.trim()?.toLowerCase() || '');
+  const lastFetchedValueRef = React.useRef<string>(task?.siteAddressStreet?.trim()?.toLowerCase() || '');
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -103,31 +103,61 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      workItemType: task.workItemType || 'Job',
-      priority: task.priority || 'Medium',
-      title: task.title || '',
-      street1: task.siteAddressStreet || '',
-      pocName: task.pocName || '',
-      description: task.description || '',
-      source: task.source || 'Call',
-      surveyRequired: !!task.surveyRequired,
-      surveyHandledBy: isHandlerPLS(task.surveyHandler) ? 'PLS' : 'Others',
-      surveyHandlerOthers: isHandlerPLS(task.surveyHandler) ? '' : task.surveyHandler,
-      surveyStatus: task.surveyStatus || 'Scheduled',
-      permitRequired: !!task.permitRequired,
-      permitHandledBy: isHandlerPLS(task.permitHandler) ? 'PLS' : 'Others',
-      permitHandlerOthers: isHandlerPLS(task.permitHandler) ? '' : task.permitHandler,
-      permitStatus: task.permitStatus || 'Not Applied',
-      materialsRequired: !!task.materialsRequired,
-      materialsList: task.materialsList || [],
-      shipmentRequired: !!task.shipmentRequired,
-      shipmentStatus: task.shipmentStatus || 'Pending',
-      confirmationStatus: task.confirmationStatus || 'Pending',
-      overallWorkStatus: task.overallWorkStatus || 'Pending',
-      dateInitiated: task.dateInitiated || '',
-      dateCompleted: task.dateCompleted || '',
+      workItemType: task?.workItemType || 'Job',
+      priority: task?.priority || 'Medium',
+      title: task?.title || '',
+      street1: task?.siteAddressStreet || '',
+      pocName: task?.pocName || '',
+      description: task?.description || '',
+      source: task?.source || 'Call',
+      surveyRequired: !!task?.surveyRequired,
+      surveyHandledBy: isHandlerPLS(task?.surveyHandler) ? 'PLS' : 'Others',
+      surveyHandlerOthers: isHandlerPLS(task?.surveyHandler) ? '' : task?.surveyHandler,
+      surveyStatus: task?.surveyStatus || 'Scheduled',
+      permitRequired: !!task?.permitRequired,
+      permitHandledBy: isHandlerPLS(task?.permitHandler) ? 'PLS' : 'Others',
+      permitHandlerOthers: isHandlerPLS(task?.permitHandler) ? '' : task?.permitHandler,
+      permitStatus: task?.permitStatus || 'Not Applied',
+      materialsRequired: !!task?.materialsRequired,
+      materialsList: task?.materialsList || [],
+      shipmentRequired: !!task?.shipmentRequired,
+      shipmentStatus: task?.shipmentStatus || 'Pending',
+      confirmationStatus: task?.confirmationStatus || 'Pending',
+      overallWorkStatus: task?.overallWorkStatus || 'Pending',
+      dateInitiated: task?.dateInitiated || '',
+      dateCompleted: task?.dateCompleted || '',
     },
   });
+
+  React.useEffect(() => {
+    if (open && task) {
+      form.reset({
+        workItemType: task.workItemType || 'Job',
+        priority: task.priority || 'Medium',
+        title: task.title || '',
+        street1: task.siteAddressStreet || '',
+        pocName: task.pocName || '',
+        description: task.description || '',
+        source: task.source || 'Call',
+        surveyRequired: !!task.surveyRequired,
+        surveyHandledBy: isHandlerPLS(task.surveyHandler) ? 'PLS' : 'Others',
+        surveyHandlerOthers: isHandlerPLS(task.surveyHandler) ? '' : task.surveyHandler,
+        surveyStatus: task.surveyStatus || 'Scheduled',
+        permitRequired: !!task.permitRequired,
+        permitHandledBy: isHandlerPLS(task.permitHandler) ? 'PLS' : 'Others',
+        permitHandlerOthers: isHandlerPLS(task.permitHandler) ? '' : task.permitHandler,
+        permitStatus: task.permitStatus || 'Not Applied',
+        materialsRequired: !!task.materialsRequired,
+        materialsList: task.materialsList || [],
+        shipmentRequired: !!task.shipmentRequired,
+        shipmentStatus: task.shipmentStatus || 'Pending',
+        confirmationStatus: task.confirmationStatus || 'Pending',
+        overallWorkStatus: task.overallWorkStatus || 'Pending',
+        dateInitiated: task.dateInitiated || '',
+        dateCompleted: task.dateCompleted || '',
+      });
+    }
+  }, [open, task, form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -168,24 +198,50 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
   };
 
   async function onSubmit(values: FormValues) {
-    if (!firestore || readOnly) return;
+    if (!firestore || readOnly || !task?.id) return;
     setIsSubmitting(true);
     try {
       const finalSurveyHandler = values.surveyHandledBy === 'PLS' ? 'PLS' : values.surveyHandlerOthers || 'Others';
       const finalPermitHandler = values.permitHandledBy === 'PLS' ? 'PLS' : values.permitHandlerOthers || 'Others';
+      
       const docRef = doc(firestore, 'workItems', task.id);
-      updateDocumentNonBlocking(docRef, { 
-        ...values, 
-        siteAddressStreet: values.street1, 
+      
+      const updateData: any = {
+        workItemType: values.workItemType,
+        priority: values.priority,
+        title: values.title,
+        siteAddressStreet: values.street1,
+        pocName: values.pocName || '',
+        description: values.description,
+        source: values.source,
+        surveyRequired: values.surveyRequired,
         surveyHandler: values.surveyRequired ? finalSurveyHandler : 'N/A',
+        surveyStatus: values.surveyRequired ? values.surveyStatus : 'N/A',
+        permitRequired: values.permitRequired,
         permitHandler: values.permitRequired ? finalPermitHandler : 'N/A',
-        overallWorkStatus: values.dateCompleted ? 'Completed' : values.overallWorkStatus, 
-        updatedAt: new Date().toISOString() 
+        permitStatus: values.permitRequired ? values.permitStatus : 'N/A',
+        materialsRequired: values.materialsRequired,
+        materialsList: values.materialsRequired ? (values.materialsList || []) : [],
+        shipmentRequired: values.shipmentRequired,
+        shipmentStatus: values.shipmentRequired ? values.shipmentStatus : 'N/A',
+        confirmationStatus: values.confirmationStatus,
+        overallWorkStatus: values.dateCompleted ? 'Completed' : values.overallWorkStatus,
+        dateInitiated: values.dateInitiated || '',
+        dateCompleted: values.dateCompleted || '',
+        updatedAt: new Date().toISOString()
+      };
+
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          updateData[key] = '';
+        }
       });
+
+      updateDocumentNonBlocking(docRef, updateData);
       toast({ title: 'Success', description: `Changes updated.` });
       setOpen(false);
     } catch (e: any) { 
-      toast({ variant: "destructive", title: "Error", description: e.message }); 
+      toast({ variant: "destructive", title: "Error", description: e.message || "Failed to update entry." }); 
     } finally { 
       setIsSubmitting(false); 
     }
@@ -195,7 +251,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" size="sm" className="rounded-none border-slate-950 font-bold uppercase text-[12px] tracking-widest">Modify</Button>
+          <Button variant="outline" size="sm" className="rounded-none border-slate-950 font-bold uppercase text-[10px] tracking-widest">Modify</Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-hidden border-none shadow-2xl p-0 rounded-none bg-white flex flex-col">
@@ -208,7 +264,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
               <DialogTitle className="text-base md:text-[15px] font-bold text-slate-950 uppercase tracking-tight">
                 {readOnly ? 'Entry Details' : `Modify Item`}
               </DialogTitle>
-              {!readOnly && (
+              {!readOnly && task?.id && (
                 <Badge variant="outline" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-none px-0">Ref: {task.id.slice(0, 8)}</Badge>
               )}
             </div>
@@ -219,33 +275,33 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
           {readOnly ? (
             <div className="space-y-12">
               <div className="space-y-2 border-l-4 border-primary pl-6">
-                <h1 className="text-2xl md:text-3xl font-bold text-slate-950 leading-tight tracking-tight uppercase">{task.siteAddressStreet}</h1>
-                <p className="text-[15px] md:text-[18px] font-bold text-slate-400 uppercase tracking-widest">{task.title}</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-950 leading-tight tracking-tight uppercase">{task?.siteAddressStreet}</h1>
+                <p className="text-[14px] md:text-[16px] font-bold text-slate-400 uppercase tracking-widest">{task?.title}</p>
               </div>
               <div className="bg-slate-50 p-6 border border-slate-100">
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <User className="h-3 w-3" /> Point of Contact
                   </p>
-                  <p className="text-[14px] font-bold text-slate-950 whitespace-pre-wrap">{task.pocName || 'No contact info provided'}</p>
+                  <p className="text-[13px] font-bold text-slate-950 whitespace-pre-wrap">{task?.pocName || 'No contact info provided'}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 border-y border-slate-100 py-8">
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Priority</p>
-                  <Badge variant="outline" className={cn("font-bold uppercase text-[12px] rounded-none border-none px-0", task.priority === 'Urgent' ? "text-red-600" : "text-slate-950")}>{task.priority}</Badge>
+                  <Badge variant="outline" className={cn("font-bold uppercase text-[11px] rounded-none border-none px-0", task?.priority === 'Urgent' ? "text-red-600" : "text-slate-950")}>{task?.priority}</Badge>
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
-                  <p className="font-bold text-slate-950 uppercase text-[12px]">{task.overallWorkStatus}</p>
+                  <p className="font-bold text-slate-950 uppercase text-[11px]">{task?.overallWorkStatus}</p>
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Type</p>
-                  <p className="font-bold text-slate-950 uppercase text-[12px]">{task.workItemType}</p>
+                  <p className="font-bold text-slate-950 uppercase text-[11px]">{task?.workItemType}</p>
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Source</p>
-                  <p className="font-bold text-slate-950 uppercase text-[12px]">{task.source}</p>
+                  <p className="font-bold text-slate-950 uppercase text-[11px]">{task?.source}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -254,7 +310,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <FileText className="h-4 w-4 text-primary" />
                     <h3 className="text-[12px] font-bold uppercase tracking-widest text-slate-950">Task Details</h3>
                   </div>
-                  <p className="text-[14px] font-medium text-slate-600 leading-relaxed bg-slate-50 p-6 border border-slate-100 whitespace-pre-wrap">{task.description || 'No description provided.'}</p>
+                  <p className="text-[13px] font-medium text-slate-600 leading-relaxed bg-slate-50 p-6 border border-slate-100 whitespace-pre-wrap">{task?.description || 'No description provided.'}</p>
                 </div>
                 <div className="space-y-8">
                   <div className="space-y-6">
@@ -266,18 +322,18 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                       <div className="p-4 border border-slate-100 bg-white">
                         <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Permit</p>
                         <div className="flex flex-col">
-                          <span className="text-[12px] font-bold text-slate-950 uppercase">{task.permitRequired ? task.permitStatus : 'N/A'}</span>
-                          {task.permitRequired && (
-                            <span className="text-[10px] text-primary font-bold uppercase mt-1">By: {task.permitHandler}</span>
+                          <span className="text-[11px] font-bold text-slate-950 uppercase">{task?.permitRequired ? task?.permitStatus : 'N/A'}</span>
+                          {task?.permitRequired && (
+                            <span className="text-[10px] text-primary font-bold uppercase mt-1">By: {task?.permitHandler}</span>
                           )}
                         </div>
                       </div>
                       <div className="p-4 border border-slate-100 bg-white">
                         <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Survey</p>
                         <div className="flex flex-col">
-                          <span className="text-[12px] font-bold text-slate-950 uppercase">{task.surveyRequired ? task.surveyStatus : 'N/A'}</span>
-                          {task.surveyRequired && (
-                            <span className="text-[10px] text-primary font-bold uppercase mt-1">By: {task.surveyHandler}</span>
+                          <span className="text-[11px] font-bold text-slate-950 uppercase">{task?.surveyRequired ? task?.surveyStatus : 'N/A'}</span>
+                          {task?.surveyRequired && (
+                            <span className="text-[10px] text-primary font-bold uppercase mt-1">By: {task?.surveyHandler}</span>
                           )}
                         </div>
                       </div>
@@ -291,11 +347,11 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 bg-slate-50 border border-slate-100">
                         <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Initiated</p>
-                        <p className="text-[12px] font-bold text-slate-950">{task.dateInitiated || 'Not Commenced'}</p>
+                        <p className="text-[11px] font-bold text-slate-950">{task?.dateInitiated || 'Not Commenced'}</p>
                       </div>
                       <div className="p-4 bg-slate-50 border border-slate-100">
                         <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Completed</p>
-                        <p className="text-[12px] font-bold text-slate-950">{task.dateCompleted || 'Not Completed'}</p>
+                        <p className="text-[11px] font-bold text-slate-950">{task?.dateCompleted || 'Not Completed'}</p>
                       </div>
                     </div>
                   </div>
@@ -315,7 +371,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Type</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -335,7 +391,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Priority</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -354,12 +410,12 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Source</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="rounded-none">
-                            {['Call', 'Email', 'Text', 'In-person'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            {['Call', 'Email', 'Text', 'In-person', 'To-do entry'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </FormItem>
@@ -373,12 +429,12 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest flex items-center gap-2">
-                        <User className="h-3 w-3" /> POC
+                        <User className="h-3 w-3" /> POC (Optional)
                       </FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Contact details..." 
-                          className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none text-[14px]" 
+                          className="border-slate-300 font-bold min-h-[80px] rounded-none resize-none text-[13px]" 
                           {...field} 
                         />
                       </FormControl>
@@ -394,7 +450,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                     <FormItem>
                       <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Reference Title</FormLabel>
                       <FormControl>
-                        <Input className="border-slate-300 font-bold h-11 rounded-none text-[14px]" {...field} />
+                        <Input className="border-slate-300 font-bold h-11 rounded-none text-[13px]" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -412,7 +468,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <div className="relative">
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                             <Input 
-                              className="pl-10 border-slate-300 font-bold h-11 rounded-none text-[14px]" 
+                              className="pl-10 border-slate-300 font-bold h-11 rounded-none text-[13px]" 
                               {...field} 
                               autoComplete="off" 
                               onFocus={() => setIsInputFocused(true)} 
@@ -425,7 +481,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                             {searchResults.map((r, i) => (
                               <div 
                                 key={i} 
-                                className="px-4 py-2.5 text-[12px] hover:bg-slate-50 cursor-pointer font-bold border-b border-slate-100" 
+                                className="px-4 py-2.5 text-[10px] hover:bg-slate-50 cursor-pointer font-bold border-b border-slate-100" 
                                 onMouseDown={() => handleSelectAddress(r)}
                               >
                                 {r.properties.formatted}
@@ -433,6 +489,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                             ))}
                           </div>
                         )}
+                        <FormMessage />
                       </FormItem>
                     )} 
                   />
@@ -446,7 +503,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                       <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Details</FormLabel>
                       <FormControl>
                         <Textarea 
-                          className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none text-[14px]" 
+                          className="border-slate-300 font-medium min-h-[100px] resize-none rounded-none text-[13px]" 
                           {...field} 
                         />
                       </FormControl>
@@ -466,7 +523,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <FormControl>
                             <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                           </FormControl>
-                          <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Survey</FormLabel>
+                          <FormLabel className="font-bold text-slate-950 text-[10px] uppercase cursor-pointer">Survey</FormLabel>
                         </FormItem>
                       )} 
                     />
@@ -478,7 +535,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <FormControl>
                             <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                           </FormControl>
-                          <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Permit</FormLabel>
+                          <FormLabel className="font-bold text-slate-950 text-[10px] uppercase cursor-pointer">Permit</FormLabel>
                         </FormItem>
                       )} 
                     />
@@ -490,7 +547,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <FormControl>
                             <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                           </FormControl>
-                          <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Materials</FormLabel>
+                          <FormLabel className="font-bold text-slate-950 text-[10px] uppercase cursor-pointer">Materials</FormLabel>
                         </FormItem>
                       )} 
                     />
@@ -502,7 +559,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           <FormControl>
                             <Checkbox checked={field.value} onCheckedChange={field.onChange} className="rounded-none border-slate-400" />
                           </FormControl>
-                          <FormLabel className="font-bold text-slate-950 text-[12px] uppercase cursor-pointer">Shipment</FormLabel>
+                          <FormLabel className="font-bold text-slate-950 text-[10px] uppercase cursor-pointer">Shipment</FormLabel>
                         </FormItem>
                       )} 
                     />
@@ -515,10 +572,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="surveyHandledBy" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handled By</FormLabel>
+                            <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Handled By</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -536,9 +593,9 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           name="surveyHandlerOthers" 
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
+                              <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
                               <FormControl>
-                                <Input className="h-9 border-slate-300 rounded-none font-bold text-[12px]" {...field} />
+                                <Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -550,10 +607,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="surveyStatus" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Status</FormLabel>
+                            <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Status</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -574,10 +631,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="permitHandledBy" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handled By</FormLabel>
+                            <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Handled By</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -595,9 +652,9 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                           name="permitHandlerOthers" 
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
+                              <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Handler Name</FormLabel>
                               <FormControl>
-                                <Input className="h-9 border-slate-300 rounded-none font-bold text-[12px]" {...field} />
+                                <Input className="h-9 border-slate-300 rounded-none font-bold text-[10px]" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -609,10 +666,10 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="permitStatus" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500">Status</FormLabel>
+                            <FormLabel className="text-[10px] font-bold uppercase text-slate-500">Status</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px]">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px]">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -629,7 +686,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                   {materialsRequired && (
                     <div className="space-y-4 animate-in fade-in slide-in-from-top-1 bg-slate-50 p-4 border border-slate-200">
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-[11px] font-bold uppercase text-slate-500 flex items-center gap-2">
+                        <FormLabel className="text-[10px] font-bold uppercase text-slate-500 flex items-center gap-2">
                           <Package className="h-3 w-3" /> Inventory List
                         </FormLabel>
                         <Button 
@@ -643,22 +700,22 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         </Button>
                       </div>
                       {fields.length === 0 && (
-                        <p className="text-[11px] font-bold text-slate-400 uppercase text-center py-4 border border-dashed border-slate-200">No items added</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase text-center py-4 border border-dashed border-slate-200">No items added</p>
                       )}
                       {fields.map((field, index) => (
                         <div key={field.id} className="flex gap-2 items-end">
                           <div className="flex-1 space-y-1">
-                            <Label className="text-[11px] font-bold uppercase text-slate-400">Item Name</Label>
+                            <Label className="text-[10px] font-bold uppercase text-slate-400">Item Name</Label>
                             <Input 
                               {...form.register(`materialsList.${index}.name` as const)} 
-                              className="h-9 border-slate-300 rounded-none font-bold text-[12px] bg-white" 
+                              className="h-9 border-slate-300 rounded-none font-bold text-[10px] bg-white" 
                             />
                           </div>
                           <div className="w-24 space-y-1">
-                            <Label className="text-[11px] font-bold uppercase text-slate-400">Qty</Label>
+                            <Label className="text-[10px] font-bold uppercase text-slate-400">Qty</Label>
                             <Input 
                               {...form.register(`materialsList.${index}.quantity` as const)} 
-                              className="h-9 border-slate-300 rounded-none font-bold text-[12px] bg-white" 
+                              className="h-9 border-slate-300 rounded-none font-bold text-[10px] bg-white" 
                             />
                           </div>
                           <Button 
@@ -682,12 +739,12 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         name="shipmentStatus" 
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px] font-bold uppercase text-slate-500 flex items-center gap-2">
+                            <FormLabel className="text-[10px] font-bold uppercase text-slate-500 flex items-center gap-2">
                               <Truck className="h-3 w-3" /> Shipment State
                             </FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[12px] bg-white">
+                                <SelectTrigger className="h-9 border-slate-300 rounded-none font-bold text-[10px] bg-white">
                                   <SelectValue placeholder="Select state..." />
                                 </SelectTrigger>
                               </FormControl>
@@ -711,7 +768,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">Confirmation</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -731,7 +788,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                         <FormLabel className="text-slate-950 font-bold uppercase text-[10px] tracking-widest">State</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[12px]">
+                            <SelectTrigger className="border-slate-300 font-bold h-11 rounded-none text-[13px]">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -755,7 +812,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                             <Calendar className="h-3 w-3" /> Date Initiated
                           </FormLabel>
                           <FormControl>
-                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[12px]" {...field} />
+                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[10px]" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -770,7 +827,7 @@ export function EditTaskDialog({ task, trigger, readOnly = false }: { task: any,
                             <Calendar className="h-3 w-3" /> Date Completed
                           </FormLabel>
                           <FormControl>
-                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[12px]" {...field} />
+                            <Input type="date" className="border-slate-300 font-bold h-11 rounded-none text-[10px]" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

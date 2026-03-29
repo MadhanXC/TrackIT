@@ -7,16 +7,13 @@ import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebas
 import { collection, query, where } from "firebase/firestore"
 import { 
   Printer, 
-  FileText, 
   TrendingUp, 
   Loader2,
   Calendar as CalendarIcon,
-  Layers,
   Filter,
-  CheckCircle2,
-  Settings2,
   RotateCcw,
-  MousePointerClick
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,7 +31,6 @@ import {
 } from "recharts"
 import { cn } from "@/lib/utils"
 import * as React from "react"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -59,6 +55,8 @@ import {
   SelectValue 
 } from "@/components/ui/select"
 
+const LOG_ITEMS_PER_PAGE = 15;
+
 export default function AnalyticsPage() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
@@ -66,7 +64,7 @@ export default function AnalyticsPage() {
   const [includeSummary, setIncludeSummary] = React.useState(true);
   const [includeCharts, setIncludeCharts] = React.useState(true);
   const [includeTable, setIncludeTable] = React.useState(true);
-  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = React.useState(1);
   
   const [basis, setBasis] = React.useState<"createdAt" | "dateInitiated">("createdAt");
   const [timeFrame, setTimeFrame] = React.useState("all");
@@ -142,45 +140,39 @@ export default function AnalyticsPage() {
     });
   }, [rawTasks, typeFilter, statusFilter, priorityFilter, sourceFilter, dateRange, basis]);
 
-  const reportTasks = React.useMemo(() => {
-    if (selectedIds.size === 0) return filteredTasks;
-    return filteredTasks.filter(t => selectedIds.has(t.id));
-  }, [filteredTasks, selectedIds]);
+  const paginatedLogTasks = React.useMemo(() => {
+    const start = (currentPage - 1) * LOG_ITEMS_PER_PAGE;
+    return filteredTasks.slice(start, start + LOG_ITEMS_PER_PAGE);
+  }, [filteredTasks, currentPage]);
+
+  const totalLogPages = Math.ceil(filteredTasks.length / LOG_ITEMS_PER_PAGE);
 
   const stats = React.useMemo(() => {
-    if (!reportTasks.length) return null;
+    if (!filteredTasks.length) return null;
 
-    const statusCounts = reportTasks.reduce((acc: any, t) => {
+    const statusCounts = filteredTasks.reduce((acc: any, t) => {
       const status = t.overallWorkStatus || 'Pending';
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     }, {});
 
-    const sourceCounts = reportTasks.reduce((acc: any, t) => {
+    const sourceCounts = filteredTasks.reduce((acc: any, t) => {
       const s = t.source || 'Call';
       acc[s] = (acc[s] || 0) + 1;
       return acc;
     }, {});
 
     return {
-      total: reportTasks.length,
-      completed: reportTasks.filter(t => t.overallWorkStatus === 'Completed').length,
-      active: reportTasks.filter(t => t.overallWorkStatus !== 'Completed').length,
+      total: filteredTasks.length,
+      completed: filteredTasks.filter(t => t.overallWorkStatus === 'Completed').length,
+      active: filteredTasks.filter(t => t.overallWorkStatus !== 'Completed').length,
       statusData: Object.entries(statusCounts).map(([name, value]) => ({ name, value })),
       sourceData: Object.entries(sourceCounts).map(([name, value]) => ({ name, value })),
     };
-  }, [reportTasks]);
+  }, [filteredTasks]);
 
   const handlePrint = () => {
-    const printRoot = document.getElementById('print-root');
-    const reportContent = document.getElementById('final-report-content');
-    if (printRoot && reportContent) {
-      printRoot.innerHTML = reportContent.innerHTML;
-      setTimeout(() => {
-        window.print();
-        printRoot.innerHTML = '';
-      }, 800);
-    }
+    window.print();
   };
 
   const COLORS = ['#4f46e5', '#94a3b8', '#1e293b', '#6366f1', '#cbd5e1'];
@@ -195,7 +187,7 @@ export default function AnalyticsPage() {
             <h1 className="text-[15px] md:text-[18px] font-bold text-slate-950 font-headline uppercase tracking-tight">Analytics</h1>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="default" size="sm" onClick={handlePrint} className="font-bold rounded-none h-10 px-4 md:px-6 uppercase text-[12px] tracking-widest shadow-none">
+            <Button variant="default" size="sm" onClick={handlePrint} className="font-bold rounded-none h-10 px-4 md:px-6 uppercase text-[10px] tracking-widest shadow-none">
               <Printer className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Export PDF</span><span className="sm:hidden">PDF</span>
             </Button>
           </div>
@@ -221,7 +213,7 @@ export default function AnalyticsPage() {
                       setPriorityFilter("all");
                       setSourceFilter("all");
                       setDateRange(undefined);
-                      setSelectedIds(new Set());
+                      setCurrentPage(1);
                     }}
                     className="h-6 text-[10px] font-bold uppercase text-slate-400 hover:text-primary tracking-widest"
                   >
@@ -233,7 +225,7 @@ export default function AnalyticsPage() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Date Basis</Label>
                     <Select value={basis} onValueChange={(v: any) => setBasis(v)}>
-                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[12px] uppercase bg-white">
+                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-none">
@@ -246,7 +238,7 @@ export default function AnalyticsPage() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Interval</Label>
                     <Select value={timeFrame} onValueChange={setTimeFrame}>
-                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[12px] uppercase bg-white">
+                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-none">
@@ -264,7 +256,7 @@ export default function AnalyticsPage() {
                     <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Timeline</Label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left font-bold text-[12px] uppercase h-10 rounded-none border-slate-200 bg-white", !dateRange && "text-muted-foreground")}>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-bold text-[10px] uppercase h-10 rounded-none border-slate-200 bg-white", !dateRange && "text-muted-foreground")}>
                           <CalendarIcon className="mr-2 h-3.5 w-3.5" />
                           {dateRange?.from ? (
                             dateRange.to ? (
@@ -282,7 +274,7 @@ export default function AnalyticsPage() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Category</Label>
                     <Select value={typeFilter} onValueChange={setTypeFilter}>
-                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[12px] uppercase bg-white">
+                      <SelectTrigger className="h-10 rounded-none border-slate-200 font-bold text-[10px] uppercase bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-none">
@@ -347,7 +339,7 @@ export default function AnalyticsPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 print:block">
                     <Card className="rounded-none border-slate-200 shadow-none print:mb-12 print:border-none">
                       <CardHeader className="border-b border-slate-50">
-                        <CardTitle className="text-[12px] font-bold uppercase tracking-widest">Status Matrix</CardTitle>
+                        <CardTitle className="text-[10px] font-bold uppercase tracking-widest">Status Matrix</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-8 h-[300px] md:h-[350px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -375,7 +367,7 @@ export default function AnalyticsPage() {
 
                     <Card className="rounded-none border-slate-200 shadow-none print:border-none">
                       <CardHeader className="border-b border-slate-50">
-                        <CardTitle className="text-[12px] font-bold uppercase tracking-widest">Source Channel Composition</CardTitle>
+                        <CardTitle className="text-[10px] font-bold uppercase tracking-widest">Source Channel Composition</CardTitle>
                       </CardHeader>
                       <CardContent className="pt-8 h-[300px] md:h-[350px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -395,7 +387,7 @@ export default function AnalyticsPage() {
                             <Legend 
                               verticalAlign="bottom" 
                               align="center"
-                              wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }}
+                              wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: '20px' }}
                             />
                           </PieChart>
                         </ResponsiveContainer>
@@ -407,42 +399,71 @@ export default function AnalyticsPage() {
                 {includeTable && (
                   <div className="pt-8 md:pt-12 border-t border-slate-100">
                     <div className="flex items-center justify-between mb-8">
-                      <h3 className="text-[14px] font-bold uppercase tracking-widest text-slate-950">Audit Log</h3>
-                      <span className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">{reportTasks.length} items Logged</span>
+                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-950">Audit Log</h3>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{filteredTasks.length} items logged</span>
                     </div>
-                    <div className="border border-slate-200 rounded-none overflow-x-auto bg-white scrollbar-hide">
-                      <table className="w-full text-left text-[12px] border-collapse min-w-[800px]">
-                        <thead className="bg-slate-50 border-b border-slate-200">
-                          <tr className="font-bold text-slate-950 uppercase tracking-wider">
-                            <th className="px-6 py-5 border border-slate-200 w-16 text-center">#</th>
-                            <th className="px-6 py-5 border border-slate-200">Address - Title</th>
-                            <th className="px-6 py-5 border border-slate-200">Category</th>
-                            <th className="px-6 py-5 border border-slate-200">State</th>
-                            <th className="px-6 py-5 border border-slate-200">Foundation Date</th>
+                    <div className="border border-slate-200 rounded-none overflow-x-auto bg-white shadow-sm">
+                      <table className="w-full text-left text-[10px] border-collapse min-w-[800px]">
+                        <thead className="bg-slate-950 border-b border-slate-800 text-white">
+                          <tr className="font-bold uppercase tracking-wider">
+                            <th className="px-6 py-5 border border-slate-800 w-16 text-center">#</th>
+                            <th className="px-6 py-5 border border-slate-800">ADDRESS - TITLE</th>
+                            <th className="px-6 py-5 border border-slate-800">CATEGORY</th>
+                            <th className="px-6 py-5 border border-slate-800">STATE</th>
+                            <th className="px-6 py-5 border border-slate-800">FOUNDATION DATE</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {reportTasks.map((task, idx) => (
-                            <tr key={task.id} className="text-slate-900 font-medium bg-white">
-                              <td className="px-6 py-4 border border-slate-200 text-center font-bold">{idx + 1}</td>
-                              <td className="px-6 py-4 border border-slate-200 font-bold">
-                                <div className="flex flex-col">
-                                  <span className="text-slate-950">{task.siteAddressStreet}</span>
-                                  <span className="text-[11px] text-slate-400 font-bold uppercase">{task.title}</span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 border border-slate-200 uppercase font-bold">{task.workItemType}</td>
-                              <td className="px-6 py-4 border border-slate-200 uppercase font-bold">
-                                {task.overallWorkStatus}
-                              </td>
-                              <td className="px-6 py-4 border border-slate-200 text-slate-950 font-bold">
-                                {task[basis] ? format(new Date(task[basis]), "yyyy-MM-dd") : 'PENDING'}
-                              </td>
-                            </tr>
-                          ))}
+                          {paginatedLogTasks.map((task, idx) => {
+                            const sequentialNumber = (currentPage - 1) * LOG_ITEMS_PER_PAGE + idx + 1;
+                            return (
+                              <tr key={task.id} className="text-slate-900 font-medium bg-white hover:bg-slate-50 transition-colors">
+                                <td className="px-6 py-4 border border-slate-200 text-center font-bold text-slate-400">{sequentialNumber}</td>
+                                <td className="px-6 py-4 border border-slate-200 font-bold">
+                                  <div className="flex flex-col">
+                                    <span className="text-slate-950 text-[13px]">{task.siteAddressStreet}</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{task.title}</span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 border border-slate-200 uppercase font-bold">{task.workItemType}</td>
+                                <td className="px-6 py-4 border border-slate-200 uppercase font-bold">
+                                  {task.overallWorkStatus}
+                                </td>
+                                <td className="px-6 py-4 border border-slate-200 text-slate-950 font-bold">
+                                  {task[basis] ? format(new Date(task[basis]), "yyyy-MM-dd") : 'PENDING'}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
+                    
+                    {totalLogPages > 1 && (
+                      <div className="flex items-center justify-center gap-4 py-8 print:hidden">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={currentPage === 1} 
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className="rounded-none h-9 font-bold uppercase text-[10px] tracking-widest border-slate-200"
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                        </Button>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                          Page {currentPage} of {totalLogPages}
+                        </span>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={currentPage === totalLogPages} 
+                          onClick={() => setCurrentPage(p => Math.min(totalLogPages, p + 1))}
+                          className="rounded-none h-9 font-bold uppercase text-[10px] tracking-widest border-slate-200"
+                        >
+                          Next <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
