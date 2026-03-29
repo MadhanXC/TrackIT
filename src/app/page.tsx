@@ -240,7 +240,7 @@ export default function Dashboard() {
                               {todo.title}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1">
                             <Button 
                               variant="ghost" 
                               size="icon" 
