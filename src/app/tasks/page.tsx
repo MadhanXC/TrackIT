@@ -327,7 +327,7 @@ export default function TasksPage() {
                                 {task.overallWorkStatus}
                               </Badge>
                               <div className="flex flex-col gap-0.5 mt-1 text-right md:text-center">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">EST: {task.createdAt ? format(new Date(task.createdAt), "MM/dd/yy") : '—'}</span>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Task Created Date: {task.createdAt ? format(new Date(task.createdAt), "MM/dd/yy") : '—'}</span>
                               </div>
                             </div>
                           </TableCell>
